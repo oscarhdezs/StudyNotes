@@ -1,0 +1,1282 @@
+﻿Spring
+
+		Spring 				JSR 								Comment
+	@Component 				@Named 						@Named can be used instead of all stereotype annotations except
+	@Configuration			@Qualifier 					@Qualifier JSR Qualifier is a marker annotation used to identify qualifier annotations, like @Named, for example
+	@Autowired 				@Inject 					@Inject may apply to static as well as instance members
+	@Autowired + @Qualifier @Resource(name="beanName") 	@Resource is useful because replaces two annotations.
+	
+	<context:annotation-config/> 
+		activates various annotations to be detected in bean classes: Spring’s @Required and @Autowired, JSR 250’s @PostConstruct, @PreDestroy, and @Resource and a few others.	
+	<context:component-scan /> 
+		extends <context:annotation-config/> is more practical to use because it supports a lot of attributes for filtering and reducing scope of scanning.
+		
+	-Inversion of Control (IoC)
+	
+	
+	-Spring Configuration Metadata
+		-There are three methods to provide configuration metadata to the spring container.
+			-XML Based configuratio
+			-Annotation-base configuration
+			-Java-Based configuration
+
+	-Bean Scopes
+		-When defining a <bean> in Spring, you have the option of declaring a scope for that bean.
+			The Spring Framework supports following five scopes, three of which are available only if you use a web-aware ApplicationContext.
+	
+				Scope									Description
+			singleton			This scopes the bean definition to a single instance per Spring IoC container (default).
+			prototype			This scopes a single bean definition to have any number of object instances.
+			request				This scopes a bean definition to an HTTP request. Only valid in the context of a web-aware Spring ApplicationContext. new bean per servlet request
+			session				This scopes a bean definition to an HTTP session. Only valid in the context of a web-aware Spring ApplicationContext. new bean per session
+			global-session		This scopes a bean definition to a global HTTP session. Only valid in the context of a web-aware Spring ApplicationContext.
+			
+			<bean id="exampleBean" class="examples.ExampleBean" scope="singleton || prototype">
+				<!-- collaborators and configuration for this bean go here -->
+			</bean>
+			
+			
+	-Bean life cycle
+		-The life cycle of a Spring bean is easy to understand. When a bean is instantiated, it may be required to perform some initialization to get it into 
+		 a usable state. Similarly, when the bean is no longer required and is removed from the container, some cleanup may be required.
+		-we simply declare the <bean> with init-method and/or destroy-method parameters. 
+			-XML Base Configuration
+				-in xml
+					<bean id="exampleBean"  class="examples.ExampleBean" init-method="init"/>		--->		init must be the name of the callback life cycle
+				-in code
+					public class ExampleBean {
+						public void init() {														--->		init name declared in the xml file
+							// do some initialization work
+						}
+					}
+			-Java-Based Configuration
+				public class ExampleBean implements InitializingBean {		--->		implements InitializingBean
+					public void afterPropertiesSet() {						--->		implements its method
+						// do some initialization work
+					}
+				}
+			
+			-XML Base Configuration
+				<bean id="exampleBean" class="examples.ExampleBean" destroy-method="destroy"/>
+			-in code
+				public class ExampleBean {
+					public void destroy() {
+						// do some destruction work
+					}
+				}
+			-Java-Based Configuration
+				public class ExampleBean implements DisposableBean {
+					public void destroy() {
+						// do some destruction work
+					}
+				}
+		-Default initialization and destroy methods:
+			If you have too many beans having initialization and or destroy methods with the same name, use default-init-method and default-destroy-method
+			attributes on the <beans> element as follows:
+				<beans xmlns="http://www.springframework.org/schema/beans"
+					....
+					default-init-method="init" 
+					default-destroy-method="destroy">
+					
+					<bean id="..." class="...">
+						<!-- collaborators and configuration for this bean go here -->
+					</bean>
+				</beans>
+				
+		-BeanPostProcessor
+			-The BeanPostProcessor interface defines callback methods that you can implement to provide your own instantiation logic, dependency-resolution logic etc.
+			-The BeanPostProcessors operate on bean instances which means that the Spring IoC container instantiates a bean instance and then BeanPostProcessor
+			interfaces do their work.
+			-An ApplicationContext automatically detects any beans that are defined with implementation of the BeanPostProcessor interface and registers these beans 
+			as post-processors, to be then called appropriately by the container upon bean creation.
+			
+			public class PostCallBack implements BeanPostProcessor{
+				@Override
+				public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+					 System.out.println("BeforeInitialization : " + beanName);
+				  return bean;  // you can return any other object as well
+				}
+				@Override
+				public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+					 System.out.println("AfterInitialization : " + beanName);
+				  return bean;  // you can return any other object as well
+				}
+			}
+			
+			<bean class="com.oscar.spring.beans.PostCallBack"/>
+
+	-Bean Definition Inheritance
+		-When you use XML-based configuration, you indicate a child bean definition by using the parent attribute, specifying the parent bean as the value of this attribute.
+	
+	
+		<beans xmlns="http://www.springframework.org/schema/beans">
+			<bean id="helloWorld" class="com.tutorialspoint.HelloWorld">
+				<property name="message1" value="Hello World!"/>
+				<property name="message2" value="Hello Second World!"/>
+			</bean>
+			<bean id="helloIndia" class="com.tutorialspoint.HelloIndia" parent="helloWorld">   --->		message 2 is inheritance from HelloWorld to HelloIndia
+				<property name="message1" value="Hello India!"/>
+				<property name="message3" value="Namaste India!"/>
+			</bean>
+		</beans>
+		
+	-Bean Definition Template:
+		-you should not specify class attribute.
+		-you should specify abstract attribute with a value of true.
+		-The parent bean cannot be instantiated on its own because it is incomplete.
+		-it is also explicitly marked as abstract. 
+		
+		<?xml version="1.0" encoding="UTF-8"?>
+		<beans xmlns="http://www.springframework.org/schema/beans">
+			<bean id="beanTeamplate" abstract="true">
+				<property name="message1" value="Hello World!"/>
+				<property name="message2" value="Hello Second World!"/>
+				<property name="message3" value="Namaste India!"/>
+			</bean>
+			<bean id="helloIndia" class="com.tutorialspoint.HelloIndia" parent="beanTeamplate">
+				<property name="message1" value="Hello India!"/>
+				<property name="message3" value="Namaste India!"/>
+			</bean>
+		</beans>
+	
+	-Dependency Injection
+		-Constructor-based dependency injection
+			-Constructor-based DI is accomplished when the container invokes a class constructor with a number of arguments, each representing a dependency on other class.
+		-Setter-based dependency injection
+			-Setter-based DI is accomplished by the container calling setter methods on your beans after invoking a no-argument constructor or no-argument 
+			 static factory method to instantiate your bean.
+	
+	-Injecting Inner Beans
+		-inner beans are beans that are defined within the scope of another bean.
+		<?xml version="1.0" encoding="UTF-8"?>
+		<beans xmlns="http://www.springframework.org/schema/beans">
+			<!-- Definition for textEditor bean using inner bean -->
+			<bean id="textEditor" class="com.tutorialspoint.TextEditor">
+				<property name="text" value="valor"/>
+				<property name="spellChecker">												--->	instance of class
+					<bean id="spellChecker" class="com.tutorialspoint.SpellChecker">		--->	declare instance of the class bean
+						<property name="filed1" value="algo"/>
+					</bean>
+				</property>
+			</bean>
+		</beans>
+		
+	-Constructor-based Dependency Injection
+		<beans>
+			<bean id="exampleBean" class="examples.ExampleBean">
+				<constructor-arg index="0" value="2001"/>
+				<constructor-arg index="1" value="Zara"/>
+							or
+				<constructor-arg type="java.lang.String" value="Zara"/>
+				<constructor-arg type="int" value="2001"/>
+			</bean>
+		</beans>
+		
+		 public Employee(String name, String empId, Address address){
+			this.name = name;
+			this.empId = empId;
+			this.address = address;
+		}
+		
+		<bean id="employee" class="org.camelcode.model.Employee">
+			<constructor-arg index="0" type="java.lang.String" value="Olivier Sips"/>
+			<constructor-arg index="1" type="java.lang.String" value="001"/>
+			<constructor-arg index="2" ref="address"/>
+		</bean>
+
+		<bean id="address" class="org.camelcode.model.Address">
+			<property name="street" value="someStreet"/>
+			<property name="city" value="someCity"/>
+			<property name="zipCode" value="1234"/>
+		</bean>		
+		
+		
+	-Injecting Collection
+		Element									Description
+		<list>			This helps in wiring ie injecting a list of values, allowing duplicates.
+		<set>			This helps in wiring a set of values but without any duplicates.
+		<map>			This can be used to inject a collection of name-value pairs where name and value can be of any type.
+		<props>			This can be used to inject a collection of name-value pairs where the name and value are both Strings.
+		
+		-Passing direct values of the collection 
+			<bean id="..." class="...">
+				<property name="listField">
+					<list>
+						<value>uno</value>
+					</list>
+				</property>
+				<property name="setField">
+					<set>
+						<value>dos</value>
+					</set>
+				</property>
+				<property name="mapField>
+					<map>
+						<entry key="1" value="tres"/>
+					</map>
+				</property>
+				<property name="propFiled>
+					<props>
+						<prop key="1">cuatro</prop>
+					</props>
+				</property>
+			</bean>
+			
+			<property name="email"><null/></property>
+			
+		-Passing a reference of a bean as one of the collection elements.
+			<bean id="..." class="...">
+				<property name="refList">
+					<list>
+						<ref bean="person"/>
+					</list>
+				</property>
+				 <property name="refMap">
+					<map>
+						<entry key ="one" value-ref="person"/>
+					</map>
+				</property>
+			</bean>
+		-To set a property to null, you simply use the <null/> element.
+			<property name="someNonNullProperty"><null/></property>
+		
+	-Util List
+		The <util:list> element comes from Spring’s util namespace. It effectively creates a bean of type java.util.List that contains all of the values 
+		or beans that it contains.
+			<util:listid="cities">
+				<bean class="com.habuma.spel.cities.City" p:name="Chicago"	p:state="IL" p:population="2853114"/>
+				<bean class="com.habuma.spel.cities.City" p:name="Atlanta"	p:state="GA" p:population="537958"/>
+				<bean class="com.habuma.spel.cities.City" p:name="Dallas"	p:state="TX" p:population="1279910"/>
+				<bean class="com.habuma.spel.cities.City" p:name="Houston"	p:state="TX" p:population="2242193"/>
+				<bean class="com.habuma.spel.cities.City" p:name="Odessa"	p:state="TX" p:population="90943"/>
+			</util:list>
+			
+			.?[] is the selection operator, selecting collection members
+			.![] for collecting a particular property from each of the members of a collection into a new collection.
+			
+				<propertyname="chosenCity" value="#{cities[2]}"/>						---> 	accessing to the third element
+				<propertyname="bigCities" value="#{cities.?[population gt 100000]}"/>	--->	return list of cities whose population is greater than 100,000.
+				<propertyname="cityNames" value="#{cities.![name]}"/>					--->	list of String objects containing the names of the cities.
+				<propertyname="cityNames" value="#{cities.![name+','+state]}"/>
+				<propertyname="cityNames" value="#{cities.?[population gt 100000].![name+','+state]}"/>
+				
+		-The [] operator is also good for retrieving a member of a java.util.Map collection. 
+		 For example, suppose the City objects were in a Map with their name as the key.
+				<propertyname="chosenCity"value="#{cities['Dallas']}"/>		--->	accesing to Dallas Map key
+		
+	SpEL
+		-Literal values
+			-We could wire this value into a bean’s property by using #{} markers in a <property> element’s value attribute
+			-The #{} markers are a clue to Spring that the content that they contain is a SpEL expression.
+				<propertyname="count"value="#{5}"/>	
+				<propertyname="message"value="Thevalueis#{5}"/>
+				<propertyname="frequency"value="#{89.7}"/>
+				<propertyname="name"value="#{'Chuck'}"/>
+				<propertyname="enabled"value="#{false}"/>
+				
+		-REFERENCING BEANS, PROPERTIES, AND METHODS
+			<propertyname="instrument"value="#{saxophone}"/>
+						same as
+			<propertyname="instrument"ref="saxophone"/>
+			
+			<bean id="carl" class="com.springinaction.springidol.Instrumentalist">
+				<propertyname="song"value="#{kenny.song}"/>							--->kenny is bean id  	---> song is the property name
+			</bean>
+		
+		-Invoking methods
+			<propertyname="song"value="#{songSelector.selectSong()}"/>		--->  sonSelector is bean id	---> selectSong is a method of songSelecto
+			<propertyname="song"value="#{songSelector.selectSong()?.toUpperCase()}"/>	---> return in upper case   (?.) if is null does not return anything 
+			
+			<propertyname="randomNumber"value="#{T(java.lang.Math).random()}"/>		---> T() 
+			
+		-Arithmetic value
+			<propertyname="adjustedAmount" value="#{counter.total+42}"/>
+			<propertyname="circumference" value="#{2 *T(java.lang.Math).PI*circle.radius}"/>
+			<propertyname="remainder" value="#{counter.total%counter.count}"/>
+			<propertyname="fullName" value="#{performer.firstName + ' ' + performer.lastName}"/>
+		
+		-Relational value
+			*when using SpEL in XML,5 it’s best to use SpEL’s textual alternatives to these operators.
+				== 	eq
+				< 	lt
+				<= 	le
+				> 	gt
+				>= 	ge
+			<propertyname="equal" value="#{counter.total==100}"/>
+			<propertyname="hasCapacity" value="#{counter.total le 100000}"/>
+			
+		-Logical value
+			<propertyname="largeCircle" value="#{shape.kind =='circle' and shape.perimetergt10000}"/>
+			<propertyname="outOfStock" value="#{!product.available}"/>
+			<propertyname="outOfStock" value="#{not product.available}"/>
+			
+		-Conditional value
+			<propertyname="instrument" value="#{songSelector.selectSong() == 'JingleBells'?piano:saxophone}"/>
+			<propertyname="song" value="#{kenny.song != null?kenny.song:'Greensleeves'}"/>
+			
+		-Regular expression
+			-The result of a matches evaluation is a Boolean value: true if the value matches the regular expression, false otherwise.
+				<propertyname="validEmail" value="#{admin.email matches '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.com'}"/>
+		
+	-XML Based Configuration
+		-Beans.xml
+			<!-- A simple bean definition -->
+			<bean id="..." class="...">
+				<!-- collaborators and configuration for this bean go here -->
+			</bean>
+
+			<!-- A bean definition with lazy init set on -->
+			<bean id="..." class="..." lazy-init="true">
+				<!-- collaborators and configuration for this bean go here -->
+			</bean>
+
+			<!-- A bean definition with initialization method -->
+			<bean id="..." class="..." init-method="...">
+				<!-- collaborators and configuration for this bean go here -->
+			</bean>
+
+			<!-- A bean definition with destruction method -->
+			<bean id="..." class="..." destroy-method="...">
+				<!-- collaborators and configuration for this bean go here -->
+			</bean>
+		
+			
+		Beans.xml
+			<?xml version="1.0" encoding="UTF-8"?>
+			<beans xmlns="http://www.springframework.org/schema/beans"
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+				<bean id="person" class="com.oscar.spring.beans.Person">	
+					<property name="name" value="Oscar"/>
+					<property name="last" value="Hernadez"/>
+					<property name="middle" value="Oswaldo"/>
+					<property name="age" value="33"/>
+					<property name="description" value="Crossfit"/>
+				</bean>
+			</beans>
+			
+	-Class java
+		public class Person {
+			private String name;
+			private String last;
+			private String middle;
+			private int age;
+			private String description;
+			... all set and get
+		}
+	
+	-Autowiring
+		to set the reference of objects automatically, applies the injection automatically 
+		
+		-byName. 	Attempts to match all properties of the autowired bean with beans that have the same name (or ID) as the properties. Properties for which there’s
+					no matching bean will remain unwired.
+		-byTime. 	Attempts to match all properties of the autowired bean with beans whose types are assignable to the properties. Properties for which there’s no
+					matching bean will remain unwired.	
+		-Constructor Tries to match up a constructor of the autowired bean with beans whose types are assignable to the constructor arguments.
+		-autodetect Attempts to apply constructor autowiring first. If that fails, byType will be tried.
+		
+			-byName
+				<bean id="kenny2" class="com.springinaction.springidol.Instrumentalist">
+					<property name="song" value="JingleBells"/>
+					<property name="instrument" ref="saxophone"/>			--->		we explicitly configured Kenny’s instrument property using <property>.
+				</bean>
+		
+			-you can use autowiring byName declaring a bean id with the same name as the property beans needs.
+				<bean id="instrument" class="com.springinaction.springidol.Saxophone"/>			--->	instruments is the bean's id also the property name of kenny bean
+				
+				<bean id="kenny" class="com.springinaction.springidol.Instrumentalist" autowire="byName">  --->	autowire for instrument id and instrument property
+					<propertyname="song" value="JingleBells"/>
+				</bean>
+			
+			-byType
+				Autowiring using byType works in a similar way to byName, except that instead of considering a property’s name, the property’s type is examined. 
+				When attempting to autowire a property by type, Spring will look for beans whose type is assignable to the property’s type.
+				
+			-Constructor
+				<bean id="duke" class="com.springinaction.springidol.PoeticJuggler" autowire="constructor"/>
+				
+				-This tells Spring to look at PoeticJuggler’s constructors and try to find beans in the Spring configuration to satisfy the arguments of one of 
+				 the constructors. You’ve already declared the bean, which matches the constructor argument of one of PoeticJuggler’s constructors.
+				-when using constructor autowiring, you must let Spring wire all of the constructor arguments—you can’t mix <constructor-arg> elements 
+				 with constructor autowiring.
+				
+			-default
+				default-autowire would be applied to all beans in a given Spring configuration file, You can still override the default on a bean-by-bean 
+				basis using the autowire attribute.
+				
+				<beans xmlns="http://www.springframework.org/schema/beans"
+					....
+					default-autowire="byType">
+				</beans>
+				
+		-Wiring with annotations
+			-Autowiring with annotations isn’t much different than using the autowire attribute in XML. But it does allow for more fine-grained autowiring, 
+			 where you can selectively annotate certain properties for autowiring.
+			 
+			-Annotation wiring isn’t turned on in the Spring container by default. we’ll need to enable it in our Spring configuration. 
+			 The simplest way to do that is with the <context:annotation-config> element
+			
+			<?xml version="1.0"encoding="UTF-8"?>
+			<beans xmlns="http://www.springframework.org/schema/beans"
+						xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+						xmlns:context="http://www.springframework.org/schema/context"
+						xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+				<context:annotation-config/>
+				<!-- beandeclarationsgohere-->
+			</beans>
+			 
+			-Spring 3 supports a few different annotations for autowiring:
+				-Spring’s own @Autowired annotation
+				-The @Inject annotation from JSR-330
+				-The @Resource annotation from JSR-250
+			
+			@Autowired
+				-In method
+					@Autowired
+					public void setInstrument(Instrument instrument){
+						this.instrument=instrument;
+					}
+				-In Constructor
+					@Autowired
+					public Instrumentalist(Instrument instrument){
+						this.instrument=instrument;
+					}		
+				-In instance variable
+					@Autowired
+					private Instrumentinstrument;
+			
+				-Spring will try to wire the property. But if no bean of type can be found, then no problem. The property will be left null.
+					@Autowired(required=false)
+					
+				-Suppose you have two beans that implement Instrument. In that event, there’s no way for @Autowired to choose which one you really want.
+				 you can use @Qualifier to specify a bean named. As shown here, the @Qualifier annotation will try to wire in a bean whose ID matches guitar.
+					@Autowired
+					@Qualifier("guitar")
+					private Instrumentinstrument;
+					
+				@Value("Eruption")
+				private Stringsong;
+				
+				@Value("#{systemProperties.myFavoriteSong}")
+				private Stringsong;
+			
+			@Inject
+				@Inject
+				private Instrument instrument;
+			
+				@Inject
+				@Named("guitar")
+				private Instrument instrument;
+				
+	-Automatically discovering beans
+		-The <context:component-scan> element does everything that <context:annotation-config> does, plus it configures Spring to automatically discover beans 
+		 and declare them for you.
+		 
+		<beans xmlns="http://www.springframework.org/schema/beans"
+			http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+			...
+			<context:component-scan
+				base-package="com.spring.beans">
+			</context:component-scan>
+		</beans>
+		
+		-The <context:component-scan> element works by scanning a package and all of its subpackages, looking for classes that could be automatically registered 
+		 as beans in the Spring container. The base-package attribute tells <context:component-scan> the package to start its scan from.
+		 
+		 By default, <context:component-scan> looks for classes that are annotated with one of a handful of special stereotype annotations:
+			Stereotypes annotations are used to mark classes according to their purpose:
+				@Component: template for any Spring-managed component(bean).
+				@Repository: template for a component used to provide data access, specialization of the
+					@Component annotation for the the Dao layer.
+				@Service: template for a component that provides service execution, specialization of the
+					@Component annotation for the Service layer.
+				@Controller: template for a web component, specialization of the @Component annotation for the Web layer.
+				@Cofiguration: configuration class containing bean definitions (methods annotated with @Bean).
+			
+				@Component 	—	A general-purpose stereotype annotation indicating that the class is a Spring component
+				@Controller —	Indicates that the class defines a Spring MVC controller
+				@Repository	—	Indicates that the class defines a data repository
+				@Service	—	Indicates that the class defines a service
+				Any custom annotation that is itself annotated with @Component
+			
+			-We can eliminate the explicit <bean> declarations from the XML configuration annotating the bean classes with @Component.
+			-When Spring scans the com.spring.beans package, it’ll find that Guitar is annotated with @Component and will automatically register it in Spring.
+ 			 By default, the bean’s ID will be generated by camel-casing the class name. In the case of Guitar that means that the bean ID will be guitar.
+				
+				package com.spring.beans;
+				import org.springframework.stereotype.Component;
+				@Component		
+				public class Guitar implements Instrument{
+					public void play(){
+						System.out.println("Strum strum strum");
+					}
+				}
+			-In this case, we’ve specified a bean ID as a parameter to @Component.
+				@Component("eddie")
+				public class Instrumentalist implements Performer{
+					// ...
+				}
+		
+		-Java Based Configuration
+			@Configuration indicates that the class can be used by the Spring IoC container as a source of bean definitions.
+			@Configuration annotation serves as a clue to Spring that this class will contain one or more Spring bean declarations. 
+			 Those bean declarations are just methods that are annotated with @Bean.
+			The @Bean annotation tells Spring that a method annotated with @Bean will return an object that should be registered as a bean in the Spring
+			application context.
+			
+				@Configuration
+				@PropertySource("classpath:datos.properties")
+				//@ComponentScan(basePackages={"com.oscar.springdemo.beans","com.oscar.springdemo.services"})
+				public class AppConfig {
+					@Bean
+					public Fortune happyFortuneServices() {
+						return new HappyFortuneServices();	---> HappyFortuneServices implement to Fortune
+					}
+	
+					@Bean
+					public Coach swimCoach(Fortune fortune) {							--->	swiamCoach is the bean id
+						SwimCoach mySwimCoach = new SwimCoach(happyFortuneServices());
+						return mySwimCoach;												---> SwimCoach implement to Coach
+					}
+				}
+
+				public class SwimCoach implements Coach{
+
+					@Value("${team}")
+					private String team;
+					@Value("${email}")
+					private String email;
+	
+					private Fortune fortune;
+
+					public SwimCoach(Fortune fortune) {
+						this.fortune = fortune;
+					}
+
+				}
+				
+				
+				public static void main(String[] args) {
+					ApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class);
+					Coach myCoach = ctx.getBean("swimCoach",Coach.class);
+				}
+				
+			
+			
+		
+	-Run bean using ApplicationContext
+		 public static void main(String[] args){
+			ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");			--->	name configuration file
+			Person person = (Person) ctx.getBean("person");										--->	id set in the configuration file for this bean
+			System.out.println(person);
+		}
+	
+	-Run bean using BeanFactory
+		public static void main(String[] args) {
+			BeanFactory factory = new XmlBeanFactory(new ClassPathResource("Beans.xml"));
+			HelloWorld obj = (HelloWorld) factory.getBean("helloWorld");
+			obj.getMessage();
+		}	
+			
+
+			
+	-Lifecycle Callbacks:
+		The @Bean annotation supports specifying arbitrary initialization and destruction callback methods, 
+		much like Spring XML's init-method and destroy-method attributes on the bean element:
+			public class Foo {
+			   public void init() {
+				  // initialization logic
+			   }
+			   public void cleanup() {
+				  // destruction logic
+			   }
+			}
+
+			@Configuration
+			public class AppConfig {
+			   @Bean(initMethod = "init", destroyMethod = "cleanup" )
+			   public Foo foo() {
+				  return new Foo();
+			   }
+			}
+	
+	-Specifying Bean Scope:
+
+		The default scope is singleton, but you can override this with the @Scope annotation as follows:
+		@Configuration
+		public class AppConfig {
+			@Bean
+			@Scope("prototype")
+			public Foo foo() {
+				return new Foo();
+			}
+		}
+				
+				
+	-AOP
+		@Before
+			This type of advice is executed before the method execution.
+		@AfterReturning	
+			This type of advice is executed only if the target method executed successfully and does not end by throwing an exception.
+		@AfterThrowing
+			The after throwing advice is similar to the after returning. The only difference is that its criterion of execution is exactly the opposite. 
+			That is, this advice is executed only when when the target method ends by throwing an exception.
+		@After
+			The after advice is executed after the target method regardless of how its execution ended, whether successfully or with an exception, and because 
+			of this, it is most suitable to use for auditing or logging.
+		@Around
+			This is the most powerful type of advice, since it can perform custom behavior before and after the invocation. It has the responsibility of choosing 
+			to perform the invocation or return its own value.
+			
+		The template that a pointcut expression follows can be defined as follows:
+			execution( [Modifiers] [ReturnType] [FullClassName].[MethodName]([Arguments]) throws [ExceptionType])
+									Mandatory								  Mandatory
+		-The class
+			@Repository("userTemplateRepo")
+			public class JdbcTemplateUserRepo implements UserRepo {
+				private RowMapper<User> rowMapper = new UserRowMapper();
+				protected JdbcTemplate jdbcTemplate;
+				public Set<User> findAll() {
+				}
+				public User findById(Long id) {
+				}
+				public Set<User> findAllByUserName(String username, boolean exactMatch) {
+				}
+			}
+				
+		-Enable AOP in configuration class
+			@Configuration
+			@ComponentScan(basePackages = {"com.ps.repos.impl","com.ps.aspects"})
+			@EnableAspectJAutoProxy
+			public class AppConfig {
+			
+			}
+	
+		-Apply AOP
+			@Aspect
+			@Component
+			public class UserRepoMonitor {
+				@Before("execution(public com.ps.repos.˙JdbcTemplateUserRepo+.findById(..))")
+				public void beforeFindById(JoinPoint joinPoint) throws Throwable {
+					String methodName = joinPoint.getSignature().getName();
+					logger.info(" ---> Method " + methodName + " is about to be called");
+				}
+			}
+		************************************************************************************************
+		-Declare classes
+			package com.springinaction.springidol;
+			public class Audience{
+				public void takeSeats(){
+					System.out.println("The audience is taking their seats.");
+				}
+				public void turnOffCellPhones(){
+					System.out.println("The audience is turning off their cell phones");
+				}
+				public void applaud(){
+					System.out.println("CLAP CLAP CLAP CLAP CLAP");
+				}
+				public void demandRefund(){
+					System.out.println("Boo! We want our money back!");
+				}
+			}
+		
+		-Registre bean
+			<bean id="audience" class="com.springinaction.springidol.Audience"/>
+	
+		-Appli OAP configuration
+			<aop:config>
+				<aop:aspect ref="audience">			-->		Bean id
+					<aop:pointcut id="performance" expression="execution(* com.springinaction.springidol.Performer.perform(..))"/>	--->Bean id and method where AOP works
+					<aop:before pointcut-ref="performance" method="takeSeats" />
+					<aop:before	pointcut-ref="performance" method="turnOffCellPhones"/>
+					<aop:after-returning pointcut-ref="performance" method="applaud" />
+					<aop:after-throwing pointcut-ref="performance" method="demandRefund" />
+				</aop:aspect>
+			</aop:config>
+		******************************************************************************************************	
+		With annotation
+			@Aspect
+			public class Audience{
+				@Pointcut("execution(* com.springinaction.springidol.Performer.perform(..))")		--->	declaring pointcut then will use this expression rather
+				public void performance(){																	the full expression.
+				}
+				@Before("performance()")															--->	use the pointcut name 
+				public void takeSeats(){
+					System.out.println("The audience is taking their seats.");
+				}
+				@Before("performance()")
+				public void turnOffCellPhones(){
+					System.out.println("The audience is turning off their cell phones");
+				}
+				@AfterReturning("performance()")
+				public void applaud(){
+					System.out.println("CLAP CLAP CLAP CLAP CLAP");
+				}			
+				@AfterThrowing("performance()")
+				public void demandRefund(){
+					System.out.println("Boo! We want our money back!");
+				}
+			}
+				
+				
+	Spring JDBC
+		-DML stands for Data Manipulation Language, and the database operations presented so far are part of it, the commands SELECT, INSERT, UPDATE, and 
+			DELETE are database statements used to create, update, or delete data from existing tables.
+		
+		-DDL stands for Data Definition Language, and database operations that are part of it are used to manipulate database objects: tables, views, cursors, etc
+		
+		-Configure a DataSource
+			-xml configuration
+				<beans>
+					<bean id="dataSource" class="org.springframework.jdbc.dataSource.DriverManagerDataSource">
+						<property name="driverClassName" value="org.apache.derby.jdbc.ClientDriver"/>
+						<property name="url" value="jdbc:derby://localhost:1527/db;create=true"/>
+						<property name="username" value="sa"/>
+						<property name="password" value="sa"/>
+					</bean>
+					<context:annotation-config/>
+					<context:component-scan base-package="com.oscar.spring"/>
+				</beans>
+			-Java configuration
+				@Bean
+				public DataSource dataSource() {
+					DriverManagerDataSource ds = new DriverManagerDataSource();
+					ds.setDriverClassName("org.h2.Driver");
+					ds.setUrl("jdbc:h2:tcp://localhost/~/spitter");
+					ds.setUsername("sa");
+					ds.setPassword("sa");
+					return ds;
+				}
+				
+				@Bean
+				public JdbcTemplate userJdbcTemplate() {			--->		Using JDBC Template
+					return new JdbcTemplate(dataSource());
+				}
+				
+			-Configure a JNDI datasource
+				-xml file
+					<jee:jndi-lookup id="dataSource" jndi-name="jdbc/MyDataSource"/>
+				-Java configuration
+					@Bean
+					public JndiObjectFactoryBean dataSource() {
+						JndiObjectFactoryBean jndiObjectFB = new JndiObjectFactoryBean();
+						jndiObjectFB.setJndiName("jdbc/SpittrDS");
+						jndiObjectFB.setResourceRef(true);
+						jndiObjectFB.setProxyInterface(javax.sql.DataSource.class);
+						return jndiObjectFB;
+					}
+		
+		-JdbcTemplate
+			The JdbcTemplate provides the developer a multitude of methods to query for entities, generic maps, and lists and simple types (long, int, String).
+			
+			Use RowMapper<T> when each row of the ResultSet maps to a domain object.
+			Use queryForObject when it is expected that execution of the query will return a single result.
+			Use RowCallbackHandler when no value should be returned.
+			Use ResultSetExtractor<T> when multiple rows in the ResultSet map to a single object.
+			
+			--Create repository that use the jdbcTemplate
+				@Repository("userTemplateRepo")
+				public class JdbcTemplateUserRepo implements UserRepo {
+					private RowMapper<User> rowMapper = new UserRowMapper();
+					protected JdbcTemplate jdbcTemplate;							---> it is injected was declared before 
+					@Autowired
+					public JdbcTemplateUserRepo(JdbcTemplate jdbcTemplate) {
+						this.jdbcTemplate = jdbcTemplate;
+					}
+					@Override
+					public User findById(Long id) {
+						String sql = "select id, email, username, password from p_user where id= ?";
+						return jdbcTemplate.queryForObject(sql, rowMapper, id);
+					}
+				}
+			--Creating the rowMapper
+				class UserRowMapper implements RowMapper<User> {
+					public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+						Long id = rs.getLong("ID");
+						String email = rs.getString("EMAIL");
+						String username = rs.getString("USERNAME");
+						String password = rs.getString("PASSWORD");
+						User user = new User();
+						user.setId(id);
+						user.setUsername(username);
+						user.setEmail(email);
+						user.setPassword(password);
+						return user;
+					}
+				}
+			-queryForObject
+				String sql = "select id, email, username,password from p_user where id= ?";
+				jdbcTemplate.queryForObject(sql, rowMapper, id);					--->	Return an object
+				
+			-queryForInt
+				public int countUsers() {
+					String sql = "select count(*) from p_user";		
+					return jdbcTemplate.queryForInt(sql);							--->	Return an int
+				}
+				
+			-queryForLong
+				public Long findIdByUsername(String username) {
+					String sql = "select id from p_user where username = ?";		--->	Passing a parameter
+					return jdbcTemplate.queryForLong(sql, username);				--->	Return a log
+				}
+				
+			-queryForMap
+				public Map<String, Object> findByIdAsMap(Long id) {
+					String sql = "select * from p_user where id= ?";				--->	Passing a parameter
+					return jdbcTemplate.queryForMap(sql, id);						--->	Return a map 
+				}
+							---	MAP RETURNED ---
+							ID=1,
+							FIRST_NAME=null,
+							USERNAME=John,
+							LAST_NAME=null,	
+							PASSWORD=test
+							---	MAP RETURNED ---							
+							
+			-queryForList
+				public List<Map<String, Object>> findAllAsMaps() {
+					String sql = "select * from p_user";
+					return jdbcTemplate.queryForList(sql);
+				}
+						---	LIST RETURNED ---
+							[
+								{
+									ID=1,
+									FIRST_NAME=null,
+									USERNAME=John,
+									EMAIL=john@pet.com
+								},
+								{
+									ID=2,
+									FIRST_NAME=null,
+									USERNAME=Mary,
+									EMAIL=mary@pet.com
+								}
+							]
+						---	LIST RETURNED ---
+				
+				jdbcTemplate.update();						--->	You can execute update, delete
+				
+				
+		-NamedParameterJdbcTemplate
+			This class provides methods analogous to JdbcTemplate that require as a parameter a map containing a pair of named parameters and their values.
+		
+				public User findById(Long id) {
+					String sql = "select id, email, username,password from p_user where id= :id";		--->	This is the only difference
+					Map<String, Object> params = new HashMap<>();
+					params.put("id", id);
+					return jdbcNamedTemplate.queryForObject(sql, params, rowMapper);
+				}
+
+							-There are 3 classes for do sql commands
+			-JdbcTemplate					--->		JdbcDaoSupport (JDBC connection)
+			-NamedParameterJdbcTemplate		--->		NamedParameterJdbcDaoSupport (JDBC with support for named parameters)
+			-SimpleJdbcTemplate				--->		SimpleJdbcDaoSupport
+			-HibernateTemplate				--->		Hibernate 3.x sessions
+			-JpaTemplate					--->		Java Persistence API entity managers
+			
+			-Commond methods
+				query				--->	return a list of object, select
+				queryForObject		--->	return a specified object, select
+				update				--->	return integer value with columns affected, update, delete, insert
+				execute				--->	for commands like create table,
+			
+			@Bean
+			public JdbcTemplate jdbcTemplate(DataSource dataSource) {
+				return new JdbcTemplate(dataSource);
+			}
+			
+	Spring Hibernate	
+		To configure JPA with Hibernate in a Spring application, the following components must be introduced:
+			-The org.hibernate.SessionFactory interface threads servicing client requests obtain Session instances from this factory.
+			-The org.hibernate.Session The session is a stateful object that manages persistent objects within the functional unit.
+			-HibernateTransactionManager this class is an implementation of PlatformTransactionManager for a single SessionFactory.
+			-org.springframework.orm.hibernate5.LocalSessionFactoryBuilder: this is a utility class that can be used to create a SessionFactory bean.
+			
+		Hibernate properties
+			hibernate.dialect: the value is a dialect class matching the database used in the application (ex: org.hibernate.dialect.H2Dialect).
+			hibernate.format_sql: if true, and the next property is true also, the generated SQL statements are printed to the console in a pretty and readable way.
+			hibernate.show_sql: if true, all the generated SQL statements are printed to the console.
+			hibernate.use_sql_comments: if true, Hibernate will put a comment inside the SQL statement to tell the developer what that statement is trying to do.
+		
+		Annotations
+			@Entity
+			@Table(name="user")
+			public class User extends AbstractEntity {
+				@Id
+				@GeneratedValue(strategy = GenerationType.AUTO)
+				protected Long id;
+				
+				@NotEmpty
+				@Column(nullable = false, unique = true)
+				private String username;
+			}
+			The @Id annotation marks the field as the unique identifier for this entity type and matches the primarykey of the database table.
+			@Entity and @Id are mandatory for a domain class.
+			@OneToMany, @ManyToOne, @ManyToMany, @OneToOne
+			
+		Session and Hibernate Querying
+			-Get current session
+				sessionFactory.getCurrentSession();
+				
+			-Session methods
+				update(entity) is used to persist changes done to an existing database object.
+				persist(entity) is used to save a new domain object into the database. If this object has other domain objects associated with it and the 
+								association is mapped with cascade="persist", the persist operation will include them as well. This method does not return a value.
+				save(entity) is used to save a new domain object into the database. Before saving the object, an identifier is generated. 
+				saveOrUpdate(entity) is used to save a domain object to the database. If the object exists, update is performed; otherwise, save is performed.
+			
+			-HSQL
+				public User findById(Long id) {
+					return session.get(User.class, id);
+				}
+			-Native Querying
+				session().createNativeQuery("select first_name from P_USER");
+	
+	Spring JPA
+		The core JPA components are as follows:
+			-Persistence Context: a context containing a set of domain objects/entities in which for every persistent entity there is a unique entity instance.
+			-Entity Manager: as the name clearly states, such an object will manage entities, will take care of creation, update, querying, deletion
+			-Entity Manager Factory: Entity Manager Factory beans have the responsibility of creating application-managed Entity Manager instances.
+			-Persistence Unit: a group of entity classes defined by the developer to map database records to objects that are managed by an Entity Manager, 
+								basically all classes annotated with @Entity, @MappedSuperclass, and @Embedded in an application.
+			
+		Configure Spring and JPA with Hibernate support
+			@Configuration
+			@EnableTransactionManagement
+			public class TestDataConfig {
+				@Bean
+				public EntityManagerFactory entityManagerFactory(){
+					LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
+					factoryBean.setPackagesToScan("com.ps.ents");
+					factoryBean.setDataSource(dataSource());
+					factoryBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+					factoryBean.setJpaProperties(hibernateProperties());
+					factoryBean.afterPropertiesSet();
+					return factoryBean.getNativeEntityManagerFactory();
+				}
+			}	
+			
+			@Repository
+			public class JpaUserRepo implements UserRepo {
+				private EntityManager entityManager;
+				@PersistenceContext												--->	This annotation is used to inject
+				void setEntityManager(EntityManager entityManager) {
+					this.entityManager = entityManager;
+				}
+			}
+			
+			public User findById(Long id) {
+				return entityManager.find(User.class, id);
+			}
+			
+	Spring MVC
+		-The Spring Web model-view-controller (MVC) framework is designed around a DispatcherServlet that handles all the HTTP requests and responses. 
+		Following is the sequence of events corresponding to an incoming HTTP request to DispatcherServlet:
+			1-After receiving an HTTP request, DispatcherServlet consults the HandlerMapping to call the appropriate Controller.
+			2-The Controller takes the request and calls the appropriate service methods based on used GET or POST method. 
+			  The service method will set model data based on defined business logic and returns view name to the DispatcherServlet.
+			3-The DispatcherServlet will take help from ViewResolver to pickup the defined view for the request.
+			4-Once view is finalized, The DispatcherServlet passes the model data to the view which is finally rendered on the browser.
+			
+		-Configuration in java app
+			public class SpittrWebAppInitializer
+				extends AbstractAnnotationConfigDispatcherServletInitializer {
+				@Override
+				protected String[] getServletMappings() {
+					return new String[] { "/" };						--->	Map servlet dispatcher to
+				}
+				@Override
+				protected Class<?>[] getRootConfigClasses() {
+					return new Class<?>[] { RootConfig.class };
+				}
+				@Override
+				protected Class<?>[] getServletConfigClasses() {
+					return new Class<?>[] { WebConfig.class };			--->	Specify configuration class
+				}
+			}
+		-Configuration using java
+			@Configuration
+			@EnableWebMvc
+			@ComponentScan("spitter.web")
+			public class WebConfig extends WebMvcConfigurerAdapter {
+				@Bean
+				public ViewResolver viewResolver() {
+					InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+					resolver.setPrefix("/WEB-INF/views/");
+					resolver.setSuffix(".jsp");
+					resolver.setExposeContextBeansAsAttributes(true);
+					return resolver;
+				}
+				@Override
+				public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+					configurer.enable();
+				}
+			}
+			
+		-Configuration in web.xml
+			<web-app id="WebApp_ID" version="2.4"
+				.......">
+				<display-name>Spring MVC Application</display-name>
+			   <servlet>
+				  <servlet-name>HelloWeb</servlet-name>						--->	define a servlet name that will be a name of the cofiguratio file
+				  <servlet-class>											--->	HelloWeb-servlet.xml
+					 org.springframework.web.servlet.DispatcherServlet
+				  </servlet-class>
+				  <init-param>
+					<param-name>contextConfigLocation</param-name>			--->	this is optional for set a custom location and file name.
+					<param-value>/WEB-INF/spring/mvc/spring-mvc-servlet.xml	--->	You can define the custom location and file
+				  <load-on-startup>1</load-on-startup>
+			   </servlet>
+
+			   <servlet-mapping>
+				  <servlet-name>HelloWeb</servlet-name>
+				  <url-pattern>*.jsp</url-pattern>
+			   </servlet-mapping>
+			</web-app>
+			
+			*The framework will try to load the application context from a file named [servlet-name]-servlet.xml located in the application's 
+			 WebContent/WEB-INF directory. In this case our file will be HelloWeb-servlet.xml.
+			 *<servlet-mapping> tag indicates what URLs will be handled by the which DispatcherServlet. 
+			 
+		-Configuration in HelloWeb-servlet.xml
+			<beans xmlns="http://www.springframework.org/schema/beans"
+				...........
+				http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+				<context:component-scan base-package="com.oscar.spring" />
+				
+				<mvc:resources mapping="/resources/**" location="/resources/"/>
+				<mvc:annotation-driven/>
+				
+				<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+					<property name="prefix" value="/WEB-INF/jsp/" />
+					<property name="suffix" value=".jsp" />
+				</bean>
+			</beans>
+			*<mvc:resources> sets up a handler for serving static content. The mapping attribute is set to /resources/**, which includes an Ant-style wildcard 
+			 to indicate that the path must begin with /resources, but may include any subpath thereof.
+			*The location attribute indicates the location of the files to be served. any requests whose paths begin with /resources will be automatically served 
+			 from the /resources folder at the root of the application.
+			
+			 *The <context:component-scan...> tag will be use to activate Spring MVC annotation scanning capability which allows to make use of annotations
+			 like @Controller and @RequestMapping etc.
+			 *The InternalResourceViewResolver will have rules defined to resolve the view names. As per the above defined rule, a logical view named hello is 
+			 delegated to a view implementation located at /WEB-INF/jsp/hello.jsp .
+			 
+		
+		-Binding request parameter
+		http://localhost:8080/spitter/spittles?spitter=habuma	 
+			 
+		@Controller
+		@RequestMapping("/spitter")
+		public class SpitterController{
+			private final SpitterService spitterService;
+			@Inject
+			public SpitterController(SpitterService spitterService){
+				this.spitterService=spitterService;
+			}
+			@RequestMapping(value="/spittles",method=GET)
+			public String listSpittlesForSpitter(@RequestParam("spitter") String username,Model model){
+				Spitterspitter=spitterService.getSpitter(username);
+				model.addAttribute(spitter);
+				model.addAttribute(spitterService.getSpittlesForSpitter(username));
+				return "spittles/list";
+			}
+		}
+		
+		--Working with formulary
+		helloworld-form.jsp
+			<html>
+				<body>
+					<form action="/hello/processForm" method="GET">		--->	action specify where to go, and method the kind of method to use
+						<input type="text" name="studentName"/>
+						<input type="submit"/>
+					</form>
+				
+				</body>
+			</html>
+		
+		@Controller
+		@RequestMapping("/hello")
+		public class HelloController{
+			
+			@RequestMapping("/processForm")										--->	the mapping 
+			public String letsShout(HttpServletRequest request, Model model){	---> 	model of spring to store and retrieve data		
+				String theName = request.getParameter("studentName");			--->	retrieve the parameter from the formulary
+				model.addAttribute("name",theName)								---> 	attribute's name and value
+				
+				return "hello-world";											---> 	Page to show
+			}
+		}
+		
+		hello-world.jsp
+			<html>
+				<body>
+					{name}														--->	Name of the attribute that was sent
+				</body>
+			</html>
+		
+		@Controller
+		@RequestMapping("hello")
+		public class HelloController {
+			@RequestMapping(method = RequestMethod.GET)
+			public String printHello(ModelMap model) {
+				model.addAttribute("message", "Hello Spring MVC Framework!");
+				return "hello";
+			}
+		}
+		
+		
+			-Model provides a few convenient methods for populating the model, such as addAttribute().
+			
+	-Form tags and data binding.
+		student-form.jsp
+			<%@ taglib prefix="form" uri=""/>
+			<html>
+				<body>
+					<form:form action="processFrom" modelAttribute="student">		--->	Name of the attribute that was sent in StudentController
+						<form:inut path="firstName"/>								--->	Name of the property of the Student bean
+						<form:inut path="lastName"/>
+						<form:select path="country">
+							<form:options items="${student.countryOptions}"/>
+						</form:select>
+						<form:radiobutton path="favoriteLanguage" value="Java"/>
+						<form:radiobutton path="favoriteLanguage" value="Ruby"/>
+						<form:checkbox path="operatingSystems" value="Linux"/>
+						<form:checkbox path="operatingSystems" value="Windows"/>
+
+						<input type="submit" value="Submit"/>
+					</form:form>
+				</body>
+			</html>
+		
+		Student.java
+			public class Student{
+				private String firstName;
+				private String lastName;
+				private String country;
+				private LinkedHashMap<String, String> countryOptions;
+				private String favoriteLanguage;
+				private String[] operatingSystems;
+				
+				public Student(){
+					countryOptions = new LinkedHashMap<>();
+					countryOptions.put("BR","Brazil");
+					countryOptions.put("MX","Mexico");
+					countryOptions.put("US","United States of America");
+				}
+				...
+				all setter and getters
+				... 
+		
+		student-confirmation.jsp
+			${sutdent.firstName} ${sutdent.lastName}
+			{sutdent.country}
+			
+		StudentController.java
+		
+		@Controller												
+		@RequestMapping("/student")								---> the path to map
+		public class StudentController{
+		
+			@RequestMapping("/showForm")						--->	The path to map
+			public String showForm(Model theModel){
+				Student theStudent = new Student();
+				theModel.addAttribute("student",theStudent);
+				return "student-form";
+			}
+		
+			@RequestMapping("/processFrom")
+			public String processForm(@ModelAttribute("student") Student student){		--->	the modelAttribute that was used in the form
+				return "student-confirmation";
+			}
+		}
+		
+	-Form Validations
+		@NotNull
+			Check that the annotated  value is not null
+		@Min
+			Must be a number >= value
+		@Max
+			Must be a number <= value
+		@Size
+			Size must match the given size.
+		@Pattern
+			Must match a regular expression pattern
+		@Future / @Past
+			Date must be in future or past of given date
+			
+		Steps to do.
+			Add validation rule to class
+			Display error messages on HTML form
+			perform validation in the Controller class
+			
+			--Add validation rule to class
+				public class Customer
+					@NotNull(message="must not be null")
+					@Size(min=1,message="is required")
+					private String lastName;
+					@Min(valu=0,message="must be greater than or equal to zero")
+					@Max(valu=10,message="must be less than or equal to ten")
+					private int age;
+					@Pattern(regexp="^[a-zA-Z0-9]{5}",message="only 5 chars/digits")
+					private String postalCode;
+					
+			--Display error messages on HTML form
+				<form:form action="processFrom" modelAttribute="student">
+						<form:input path="lastName"/>
+						<form:errors path="lastName"/>
+						<form:input path="age"/>
+						<form:errors path="age"/>
+						<form:input path="postalCode"/>
+						<form:errors path="postalCode"/>
+				</form>
+			
+			--perform validation in the Controller class
+				public String processForm(@Valid @ModelAttribute("student") Student student
+											@BindingResult theBindingResult){
+					if(theBindingResult.hasErrors()){
+						return "customer-form" ;
+					}else{
+						return "student-confirmation";
+					}
+				}
+				
+	-Hibernate
+	
+	-Security
+		-Enable in web.xml
+			<filter>
+				<filter-name>
+					springSecurityFilterChain
+				</filter-name>
+				<filter-class>
+					org.springframework.web.filter.DelegatingFilterProxy
+				</filter-class>
+			</filter>
+		
+		-Enable with java 
+			If you'd rather configure DelegatingFilterProxy in Java with a WebApplication-Initializer, then all you need to do is create a new class that 
+			extends Abstract-SecurityWebApplicationInitializer:
+
+			public class SecurityWebInitializer	extends AbstractSecurityWebApplicationInitializer {
+			}
+		
+		-Configure Security
+			@Configuration
+			@EnableWebSecurity
+			public class SecurityConfig extends WebSecurityConfigurerAdapter {
+				protected void configure(HttpSecurity http) throws Exception {
+					http
+					.authorizeRequests()
+					.anyRequest().authenticated()
+					.and()
+					.formLogin().and()
+					.httpBasic();
+				}
+			
+			}
