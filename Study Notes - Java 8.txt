@@ -1,0 +1,295 @@
+A lambda expression can be understood as a kind of anonymous function: it doesn’t have a name, but it has a list of parameters, a body, a return type, and 
+also possibly a list of exceptions that can be thrown.
+Lambda expressions can be used only where a functional interface is expected.
+
+Functional interface is an interface that specifies exactly one abstract method.
+An interface is still a functional interface if it has many default methods as long as it specifies only one abstract method.
+
+Functional descriptor is the signature of the abstract method of the functional interface.
+Lambda expression can be assigned to a variable or passed to a method expecting a funcional interface as argument. 
+
+Common funcional interfaces
+	Predicate
+		When you need to represent a boolean expression that use an object of type T.
+	
+		@FunctionalInterface
+		public interface Predicate<T>{
+			boolean test(T t);
+		}
+		Predicate<String> nonEmptyStringPredicate = (String s) -> !s.isEmpty();
+
+	Consumer
+		When you need to access an object of type T and perform some operations on it.
+	
+		@FunctionalInterface
+		public interace Consumer<T>{
+			void accept(T t);
+		}
+		(Integer i) -> System.out.println(i)
+		
+	Function<T,R>
+		When you need to define a lambda that maps information from an input object to an output.
+		
+		@FunctionalInterface
+		public interace Function<T, R>{
+			R apply(T t);
+		}
+		(String s) ->  s.length();
+		
+	
+Restriction on local variables
+	Lambda are allowed to capture instance variables and static variables without restrictions. But local variables have to be explicitly declared 
+	final or are effectively final. In other words Lambda expressions can capture local variables that are assigned to them only once.
+	int portNumber = 13337;								// Error: local variable referenced
+	Runnable r = () -> System.out.println(porNumber);	// from a lambda expression must
+	portNumber = 3131313;								// be final or effectively final.
+	
+Method reference
+	Method references let you reuse existing method definitions and pass them just like lambdas.
+	When you need a method reference, the target reference is placed before the delimiter :: and the name of the method is provided after it.
+	For example, Apple::getWeight is a method reference to the method getWeight defined in the Apple class.
+		(Apple a) -> a.getWeight()					equals to			Apple::getWeight
+		() -> Thread.currentThread().dumpStack() 						Thread.currentThread::dumpStack
+		(str, i) -> str.substring(i) 									String::substring
+		(String s) -> System.out.println(s) 							System.out::println
+		(String s) -> Integer.parseInt(s)								Integer::parseInt
+		(list, element) -> list.contains(element)						List::contains
+		
+Constructor references
+	
+	
+Stream
+	 Streams are an update to the Java API that lets you manipulate collections of data in a declarative way (you express a query rather than code 
+	an ad hoc implementation for it).
+	 A stream is a sequence of elements from a source that supports data processing operations.
+	 Streams make use of internal iteration: the iteration is abstracted away through operations such as filter, map, and sorted.
+	 There are two types of stream operations: intermediate and terminal operations.
+	 Intermediate operations such as filter and map return a stream and can be chained together. They’re used to set up a pipeline of operations 
+		but don’t produce any result.
+	 Terminal operations such as forEach and count return a nonstream value and process a stream pipeline to return a result.
+	 The elements of a stream are computed on demand.
+	
+	The Streams API in Java 8 lets you write code that’s
+		 Declarative— More concise and readable
+		 Composable— Greater flexibility
+		 Parallelizable— Better performance
+		
+	Intermediate operations
+		filter		Stream<T>		Predicate<T> 		T -> boolean
+			This operation takes as argument a predicate (a function returning a boolean) and returns a stream including all elements that match the predicate.
+			
+		map  		Stream<R> 		Function<T, R> 		T -> R
+			It takes a function as argument. The function is applied to each element, mapping it into a new element.
+			
+		limit  		Stream<T>
+			It returns another stream that’s no longer than a given size.
+			
+		sorted  	Stream<T> 		Comparator<T> 		(T, T) -> int
+		distinct  	Stream<T>
+			It returns a stream with unique elements (according to the implementation of the hashCode and equals methods of the objects produced by the stream).
+		
+		skip
+			It return a stream that discards the first n elements. If the stream has fewer elements than n, then an empty stream is returned
+		
+		
+			
+		
+	Terminal operations
+		forEach		Consumes each element from a stream and applies a lambda to each of them. The operation returns void.
+		count 		Returns the number of elements in a stream. The operation returns a long.
+		collect 	Reduces the stream to create a collection such as a List, a Map, or even an Integer.
+		anyMatch	returns a boolean and is therefore a terminal operation.
+		allMatch	works similarly to anyMatch but will check to see if all the elements of the stream match the given predicate.
+		noneMatch	It ensures that no elements in the stream match the given predicate.
+		findAny		returns an arbitrary element of the current stream.
+		
+	Primitive stream 
+		IntStream, DoubleSteam, LongStream
+			Using this you avoid hidden boxing costs.
+	
+	Mapping to a numeric stream
+		Here, the method mapToInt extracts all the values and returns an IntStream as the result (rather than a Stream<Integer>). You can call the method
+		sum, max, min, and average, to perform any of these operations. if the stream were empty, the method would return 0 by default.
+			stream()
+			.mapToInt(t->t.getValue())
+			.sum();
+	
+	Converting back to a stream of objects.
+		once you have a numeric stream, you may be interested in converting it back to a nonspecialized stream.
+		To convert from a primitive stream to a general stream:
+			IntStream intStream = stream().mapToInt(t->t.getValue());
+			Stream<Integer> stream = intStream.boxed();
+			
+	Ranges
+		IntStream evenNumber = Int.Stream.rangeClosed(1,100).filter(n-Z n%2 ==0);
+		
+	Stream from values
+		Stream<String> stream = Stream.of("Java 8 ", "Lambdas ", "In ", "Action");
+		stream.map(String::toUpperCase).forEach(System.out::println);
+	
+	Stream from Arrays
+		int [] numbers = {2,3,5,7,11,13};
+		int sum = Arrays.stream(numbers).sum();
+		
+	Stream from files
+		
+	infinite streams
+		Stream.iterate
+			Stream.iterate(0,n->n+2)
+					.limit(10)
+					.forEach(System.out::println);
+			Stream.iterate(new int[] {0,1},n->new int[] {n[1],n[0]+n[1]}).limit(20).forEach(t->System.out.println("("+t[0]+","+t[1]+")"));
+			
+		Stream.generate
+			
+Collectors
+	Reducing and summarizing
+	Grouping
+		public class Dish {
+			public enum Type {
+				MEAT, FISH, OTHER
+			}
+			public String name;
+			private int calories;
+		}
+
+		Map<Dish.Type, List<Dish>> dishesByType = menu.stream().collect(Collectors.groupingBy(Dish::getType));
+		
+	Grouping by other properties
+		public enum CaloricLevel { DIET, NORMAL, FAT }			--->		create a enum
+		Map<CaloricLevel, List<Dish>> dishesByCaloricLevel = 
+			menu.stream().collect(
+									groupingBy(
+										dish -> {if (dish.getCalories() <= 400) return CaloricLevel.DIET;
+													else if (dish.getCalories() <= 700) return CaloricLevel.NORMAL;
+													else return CaloricLevel.FAT;
+												}
+											)
+								);
+	Multilevel Grouping
+		Map<Dish.Type, Map<CaloricLevel, List<Dish>>> dishesByTypeCaloricLeve=
+			menu.stream().collect(
+				groupingBy(Dish::getType,
+					groupingBy(dish -> {
+						if(dish.getCalories()<=400) return CaloricLevel.DIET;
+							else if (dish.getCalories() <= 700) return CaloricLeve.NORMAL;
+						else return CaloricLevel.FAT;
+					})
+				)
+			);
+			
+	Partitioning
+		Map<Boolean, List<Dish>> partitionedMenu = menu.stream().collect(Collectors.partitioningBy(Dish::isVegetarian));
+		List<Dish> vegetarianDishes = partitionedMenu.get(true);
+	
+	toList
+		Gather all the stream's item in a List.
+			List<Dish> dishes = menuStream.collect(toList());
+	toSet
+		Gather all the stream's item in a Set, eliminating dup0licates.
+			Set<Dish> dishes = menuStream.collect(toSet());
+	toCollection	
+		Gather all the stream's items in the collection created by the provider supplier.
+			Collection<Dish> dishes = menuStream.collect(toCollection(), ArrayList::new);
+	counting 
+		Count the number of items in the stream
+			menuStream.collect(counting());
+	summingInt	
+		Sum the values of an Integer property of the imtems in the stream		
+			int totalCalories = menuStream.collect(summingInt(Dish::getCalories))
+	averagingInt
+		Calculate the average value of an Integer property of the items in the stream
+	summarizingint
+		Collect statics regarding an Integer property of the items in the stream, such as the maximum, minimum, total and average.
+			IntSummaryStatics menuStatics = menuStream.collect(summarizingInt(Dish::getCalories));
+	joining 
+		Concatenate the string reulsting from the invocation of the toSTring method on each item of the stream.
+	maxBy	
+		An Optional wrapping the maximal element in this stream according to the given comparator or Ompional.empty if the stream is empty.
+	reducing
+		Reduce the stream to a single value starting from an initial value used as accumulator and iteratively combining it with each item of the stream using a Binary
+			menuStream.collect(reducing(0, Dish::getCalories, Integer::sum));
+	collectingAndThen
+		Wrap another collector and apply a transformation function to its result.
+			int howManyDishes = menuStream.collect(collectingAndThen(toList(), List::size));
+	groupingBy
+		Group the items in the stream based on the value of one of their properties and use those values as keys in the resulting Map.
+			Map<Dish.Type, List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::getType));
+	partitioningBy
+		Partition the items in the stream based on the result of the application of a predicate to each of them.
+			Map<Boolean, List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish::isVegetarian));
+			
+Parallel data processing and performance.
+	
+	
+Refactoring
+	We describe three simple refactorings that use lambdas, method references, and streams, which you can apply to your code to improve its readability:
+		 Refactoring anonymous classes to lambda expressions
+		 Refactoring lambda expressions to method references
+		 Refactoring imperative-style data processing to streams
+		
+Default Methods
+	Default methods start with a default keywrod and contain a body like class method do.
+	Default methods help library designers evolve APIs in a backward-compatible way.
+	Default methods can be used for creating optional methods and multiple inheritance of behavior.
+	There are resolution rules to resolve conflicts when a class inherits from several default methods with the same signature:
+		Classes always win. A method declaration in the class or a superclass takes priority over any default method declaration.
+		Otherwise sub-interfaces win, the method with the same signature in the most specific default-providing interface is selected. 
+			(If B extends A, B is more specific than A both are interfaces).
+		When two methods are equally specific, a class can explicitly override a method and select which one to call.
+			X.super.m(...) where X is the superinterface whose method m you want to call.
+			
+Optional
+	-Java 8 introduces the class java.util.Optional<T> to model the presence or absence of a value.
+	-You can create Optional objects with the static factory methods Optional.empty, Optional.of, and Optional.ofNullable.
+	-The Optional class supports many methods such as map, flatMap, and filter, which are conceptually similar to the methods of a stream.
+	
+	Empty Optional
+		Optional<Car> optCar = Optional.empty();
+	
+	Optional from a non-null value
+		Optional<Car> optCar = Optional.of(car);
+			If car were null, a NullPointerException would be immediately thrown
+		
+	Optional from null
+		Optional<Car> optCar = Optional.ofNullable(car);
+			If car were null, the resulting Optional object would be empty.
+			
+	Extracting and transforming values from optionals with map
+		Optional<Insurance> optInsurance = Optional.ofNullable(insurance);
+		Optional<String> name = optInsurance.map(Insurance::getName);
+			If the Optional contains a value, then the function passed as argument to map transforms that value.
+			If the Optional is empty, then nothing happens.
+			
+	Chaining Optional objects with flatMap
+		person.flatMap(Person::getCar)
+			  .flatMap(Car::getInsurance)
+			  .map(Insurance::getName)
+			  .orElse("Unknown");
+	
+	Default actions and unwrapping an optional
+		get() is the simplest but also the least safe of these methods. It returns the wrapped value if present but throws a NoSuchElementException otherwise.
+		orElse(T other) it allows you to provide a default value for when the optional doesn’t contain a value.
+		orElseGet(Supplier<? extends T> other) is the lazy counterpart of the orElse method, because the supplier is invoked only if the optional contains no value.
+		orElseThrow(Supplier<? extends X> exceptionSupplier) is similar to the get method in that it throws an exception when the optional is empty, but in this case 
+			it allows you to choose the type of exception that you want to throw.
+		ifPresent(Consumer<? super T> consumer) lets you execute the action given as argument if a value is present; otherwise no action is taken.
+
+Asynchronous API
+
+	public Future<Double> getPriceAsync(String product){						--->	Return the Future object
+		CompletableFuture<Double> futurePrice = new CompletableFuture<>();		--->	Create the CompletableFuture that will contain the result of the computation
+		new Thread(()->{														--->	Execute the computation asynchronously in a differente Thread
+			double price = calculatePrice(product);
+			futurePrice.complete(price);
+		}).start();
+		return futurePrice;														--->	Return the Future without waiting for the computation of the result it contains
+		
+			or
+		return CompletableFuture.supplyAsync(() -> calculatePrice(product));
+		
+	}
+
+Functional programing
+	programming using functions.
+		a function corresponds to a mathematical function: it takes zero or more arguments, gives one or more results, and has no side effects.
