@@ -1,0 +1,405 @@
+Junit Study Notes
+
+	JUnit is a unit testing framework for Java programming language. JUnit has been important in the development of test-driven development.
+	Testing is the process of checking the functionality of an application to ensure it runs as per requirements. Unit testing comes into picture at the developers’
+	level; it is the testing of single entity (class or method). Unit testing plays a critical role in helping a software company deliver quality products to its customers.
+	
+
+	What is a Unit Test Case ?
+		A Unit Test Case is a part of code, which ensures that another part of code (method) works as expected.
+		A formal written unit test case is characterized by a known input and an expected output, which is worked out before the test is executed. The known input should 
+		test a precondition and the expected output should test a post-condition.
+		
+	Features of JUnit Test Framework
+		JUnit test framework provides the following important features
+			Fixtures
+			Test suites
+			Test runners
+			JUnit classes
+			
+		Fixtures
+			Fixtures is a fixed state of a set of objects used as a baseline for running tests. The purpose of a test fixture is to ensure that there is a well-known 
+			and fixed environment in which tests are run so that results are repeatable. It includes:
+				setUp() method, which runs before every test invocation.	@Before
+				tearDown() method, which runs after every test method.		@After
+				
+		Test Suites
+			A test suite bundles a few unit test cases and runs them together. In JUnit, both @RunWith and @Suite annotation are used to run the suite test. 
+			Given below is an example that uses TestJunit1 & TestJunit2 test classes.
+				//JUnit Suite Test
+				@RunWith(Suite.class)
+
+				@SuiteClasses({ 
+					TestJunit1.class ,
+					TestJunit2.class
+				})
+
+				public class JunitTestSuite {
+				}
+				
+		Test Runners
+			Test runner is used for executing the test cases. Here is an example that assumes the test class TestJunit already exists.
+				public static void main(String[] args){
+					Result result = JUnitCore.runClasses(TestJunitName.class);
+					for(Failure failure:result.getFailures()){
+						System.out.println(failure.getMessage())
+					}
+					System.out.println(result.wasSuccessful());
+					
+		JUnit Classes
+			JUnit classes are important classes, used in writing and testing JUnits. Some of the important classes are
+				Assert − Contains a set of assert methods.
+				TestCase − Contains a test case that defines the fixture to run multiple tests.
+				TestResult − Contains methods to collect the results of executing a test case.
+				TestSuite - Contains a composite of tests.
+				
+			Assert
+				void assertEquals(boolean expected, boolean actual)
+					Checks that two primitives/objects are equal.
+				void assertTrue(boolean condition)
+					Checks that a condition is true.
+				void assertFalse(boolean condition)
+					Checks that a condition is false.
+				void assertNotNull(Object object)
+					Checks that an object isn't null.
+				void assertNull(Object object)
+					Checks that an object is null.
+				void assertSame(object1, object2)
+					The assertSame() method tests if two object references point to the same object.
+				void assertNotSame(object1, object2)
+					The assertNotSame() method tests if two object references do not point to the same object.
+				void assertArrayEquals(expectedArray, resultArray);
+					The assertArrayEquals() method will test whether two arrays are equal to each other.
+					
+	Annotation
+		@Test(expected=Exception.class,timeout=1000)
+			The Test annotation tells JUnit that the public void method to which it is attached can be run as a test case.
+		@Before
+			Several tests need similar objects created before they can run. Annotating a public void method with @Before causes that method to be run before 
+			each Test method.
+		@After
+			If you allocate external resources in a Before method, you need to release them after the test runs. Annotating a public void method with @After 
+			causes that method to be run after the Test method.
+		@BeforeClass
+			Annotating a public static void method with @BeforeClass causes it to be run once before any of the test methods in the class.
+		@AfterClass
+			This will perform the method after all tests have finished. This can be used to perform clean-up activities.
+		@Ignore
+			The Ignore annotation is used to ignore the test and that test will not be executed.
+		@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+			You can use an annotation to define that the test methods are sorted by method name, in lexicographic order.
+			
+			public class JunitAnnotation {
+			   //execute before class
+			   @BeforeClass
+			   public static void beforeClass() {
+				  System.out.println("in before class");
+			   }
+			   //execute after class
+			   @AfterClass
+			   public static void  afterClass() {
+				  System.out.println("in after class");
+			   }
+			   //execute before test
+			   @Before
+			   public void before() {
+				  System.out.println("in before");
+			   }
+			   //execute after test
+			   @After
+			   public void after() {
+				  System.out.println("in after");
+			   }
+			   //test case
+			   @Test
+			   public void test() {
+				  System.out.println("in test");
+			   }
+			   //test case ignore and will not execute
+			   @Ignore
+			   @Test
+			   public void ignoreTest() {
+				  System.out.println("in ignore test");
+			   }
+			   // If a test case takes more time than the specified number of milliseconds, then JUnit will automatically mark it as failed.
+			    @Test(timeout = 1000)
+				public void testPrintMessage() {	
+					System.out.println("Inside testPrintMessage()");     
+					messageUtil.printMessage();     
+				}
+				//You can test whether the code throws a desired exception or not.
+				@Test(expected = ArithmeticException.class)
+				public void testPrintMessage() {	
+					System.out.println("Inside testPrintMessage()");     
+					messageUtil.printMessage();     
+				}
+			}
+			
+	Parameterized Test
+		Allow a developer to run the same test over and over again using different values. 
+		There are five steps that you need to follow to create a parameterized test.
+			Annotate test class with @RunWith(Parameterized.class).
+			Create a public static method annotated with @Parameters that returns a Collection of Objects (as Array) as test data set.
+			Create a public constructor that takes in what is equivalent to one "row" of test data.  or use @Parameter(x)
+			Create an instance variable for each "column" of test data.	or use @Parameter(x)
+			Create your test case(s) using the instance variables as the source of the test data.
+			
+			@RunWith(Parameterized.class)
+			public class ParameterizedTestFields {
+				// fields used together with @Parameter must be public
+				@Parameter(0)
+				public int m1;
+				@Parameter(1)
+				public int m2;
+				@Parameter(2)
+				public int result;
+
+				// creates the test data
+				@Parameters
+				public static Collection<Object[]> data() {
+					Object[][] data = new Object[][] { { 1 , 2, 2 }, { 5, 3, 15 }, { 121, 4, 484 } };
+					return Arrays.asList(data);
+				}
+
+				@Test
+				public void testMultiplyException() {
+					MyClass tester = new MyClass();
+					assertEquals("Result", result, tester.multiply(m1, m2));
+				}
+
+				// class to be tested
+				class MyClass {
+					public int multiply(int i, int j) {
+						return i *j;
+					}
+				}
+
+			}
+		or use the new approach
+			@RunWith(JUnitParamsRunner.class)
+			public class PersonTest {
+
+			  @Test
+			  @Parameters({"17, false", 
+						   "22, true" })
+			  public void personIsAdult(int age, boolean valid) throws Exception {
+				assertThat(new Person(age).isAdult(), is(valid));
+			  }
+			  
+			}
+	
+	@Rules
+		Via JUnit rules you can add behavior to each tests in a test class. You can annotate fields of type TestRule with the @Rule annotation. 
+		You can create objects which can be used and configured in your test methods. This adds more flexibility to your tests. You could, for example, 
+		specify which exception message you expect during the execution of your test code.
+			
+			public class RuleExceptionTesterExample {
+			  @Rule
+			  public ExpectedException exception = ExpectedException.none();
+			  @Test
+			  public void throwsIllegalArgumentExceptionIfIconIsNull() {
+				exception.expect(IllegalArgumentException.class);
+				exception.expectMessage("Negative value not allowed");
+				ClassToBeTested t = new ClassToBeTested();
+				t.methodToBeTest(-1);
+			  }
+			}
+	
+	@Category
+		It is possible to define categories of tests and include or exclude them based on annotations.
+		
+			public interface FastTests { /* category marker */
+			}
+			public interface SlowTests { /* category marker */
+			}
+			public class A {
+				@Test
+				public void a() {
+					fail();
+				}
+				@Category(SlowTests.class)
+				@Test
+				public void b() {
+				}
+			}
+			@Category({ SlowTests.class, FastTests.class })
+			public class B {
+				@Test
+				public void c() {
+				}
+			}
+			@RunWith(Categories.class)
+			@IncludeCategory(SlowTests.class)
+			@SuiteClasses({ A.class, B.class })
+			// Note that Categories is a kind of Suite
+			public class SlowTestSuite {
+				// Will run A.b and B.c, but not A.a
+			}
+
+
+Mockito Study Notes
+
+	Mockito is a mocking framework, JAVA-based library that is used for effective unit testing of JAVA applications. Mockito is used to mock interfaces so that a 
+	dummy functionality can be added to a mock interface that can be used in unit testing.
+	Mock objects do the mocking of the real service. A mock object returns a dummy data corresponding to some dummy input passed to it.
+	Mockito has certain limitations. For example:
+		-you cannot mock static methods
+		-you cannot mock static private methods.
+	
+	--Create Mock
+		Mockito provides various methods to create mock objects.
+			mock() creates mocks without bothering about the order of method calls that the mock is going to make in due course of its action.
+				CalculatorService calcService;
+				calcService = mock(CalculatorService.class);
+				
+			@Mock annotation; If you use the @Mock annotation, you must trigger the creation of annotated objects. The MockitoRule allows this. It invokes the static 
+			method MockitoAnnotations.initMocks(this) to populate the annotated fields. Alternatively you can use @RunWith(MockitoJUnitRunner.class).
+				public class MockitoTest  {
+					@Rule public MockitoRule mockitoRule = MockitoJUnit.rule(); 
+					@Mock
+					CalculatorService calcService;
+				}
+							or
+				@RunWith(MockitoJUnitRunner.class)
+				public class MockitoTest  {
+					@Mock
+					CalculatorService calcService;
+				}
+	--Using @InjectMocks for dependency injection via Mockito
+		You also have the @InjectMocks annotation which tries to do constructor, method or field dependency injection based on the type. 
+		Mockito can inject mocks either via constructor injection, setter injection, or property injection and in this order. 
+		So if ArticleManager would have a constructor that would only take User and setters for both fields, only the mock for User would be injected.
+		For example, assume that you have the following class.
+			public class ArticleManager {
+				private User user;
+				private ArticleDatabase database;
+
+				public ArticleManager(User user, ArticleDatabase database) {
+					super();
+					this.user = user;
+					this.database = database;
+				}
+
+				public void initialize() {
+					database.addListener(new ArticleListener());
+				}
+			}
+		This class can be constructed via Mockito and its dependencies can be fulfilled with mock objects as demonstrated by the following code snippet.
+			@RunWith(MockitoJUnitRunner.class)
+			public class ArticleManagerTest  {
+				   @Mock 
+				   ArticleCalculator calculator;
+				   @Mock 
+				   ArticleDatabase database;
+				   @Mock 
+				   User user;
+				   @InjectMocks 
+				   private ArticleManager manager; 
+
+				   @Test public void shouldDoSomething() {
+					   // calls addListener with an instance of ArticleListener
+					   manager.initialize();
+					   // validate that addListener was called
+					   verify(database).addListener(any(ArticleListener.class));
+				   }
+			}
+		
+	--Adding Behavior
+		Mockito adds a functionality to a mock object using the methods when().thenReturn   and doReturn().when()
+			when().thenReturn() is type-checking of the value that you're returning at compile time.
+			is not possible stubbing void methods.
+			Mocks can return different values depending on arguments passed into a method. The when(…​.).thenReturn(…​.) method chain is used to specify a a return
+			when(MethodCallWithParameters).thenReturn(result) 		or		when(MethodCallWithParameters)thenThrow(anyException)
+				value for a method call with pre-defined parameters.
+					CalculatorService calcService;
+					calcService = mock(CalculatorService.class);
+					//add the behavior of calc service to add two numbers
+					when(calcService.add(10.0,20.0)).thenReturn(30.00);
+					 assertEquals(calcService.add(10.0,20.0), 30.0,0.0);
+				Here we've instructed Mockito to give a behavior of adding 10 and 20 to the add method of calcService and as a result, to return the value of 30.00.
+					when(calcService.add(0.0,0.0)).thenThrow(new NullPointerException("You can not dividi by 0"));
+		
+			doReturn(result).when(object).methodName("parameter")		 and 	doThrow(anyException).when(object).methodName("parameter")
+				Used for stubbing void methods
+				use when you want stubbing one object that use spy() before
+		
+		
+		
+			
+	--Argument matchers
+		any(Class<T> type) 
+			Matches any object of given type, excluding nulls.
+		anyBoolean() 
+			Any boolean or non-null Boolean
+		anyCollection() 
+			Any non-null Collection.
+		anyDouble() 
+			Any double or non-null Double.
+		anyInt() 
+			Any int or non-null Integer.
+		contains(String substring) 
+			String argument that contains the given substring.
+		endsWith(String suffix) 
+			String argument that ends with the given suffix.
+		eq(xxx value) 
+			xxx argument that is equal to the given value.
+	
+	--Spying 
+		Mockito provides option to create spy on real objects. When spy is called, then actual method of real object is called.
+			//create a spy on actual object
+			CalculatorService calcService;				--->	CalculatorService it is an interface
+			Calculator calculator = new Calculator();	--->	object that implements CalculatorService
+			calcService = spy(calculator);				--->	with spy we call the real object
+
+			//perform operation on real object
+			//test the add functionality
+			Assert.assertEquals(mathApplication.add(20.0, 10.0),30.0,0);	--->	Execute the real call
+		
+	--Reseting mock
+		Mockito provides the capability to a reset a mock so that it can be reused later. Take a look at the following code snippet.
+			//add the behavior to add numbers
+			 when(calcService.add(20.0,10.0)).thenReturn(30.0);
+		  
+			//test the add functionality
+			Assert.assertEquals(mathApplication.add(20.0, 10.0),30.0,0);
+
+			//reset the mock	  
+			reset(calcService);
+
+			//test the add functionality after resetting the mock
+			Assert.assertEquals(mathApplication.add(20.0, 10.0),30.0,0);   --->	if fails because the reset, reset the first when condition.
+
+	
+	--Verifying Behavior
+		Mockito can ensure whether a mock method is being called with reequired arguments or not. It is done using the verify() method. Take a look at the 
+		following code snippet.
+			//test the add functionality
+			Assert.assertEquals(mathApplication.add(10.0, 20.0),30.0,0);
+			//verify call to calcService is made or not with same arguments.
+			verify(calcService).add(10.0, 20.0);
+			
+	--Expecting Calls
+		Mockito provides a special check on the number of calls that can be made on a particular method. Suppose MathApplication should call the CalculatorService.add()
+		method only once, then it should not be able to call CalculatorService.add() more than once.
+			//add the behavior of calc service to add two numbers
+			when(calcService.add(10.0,20.0)).thenReturn(30.00);
+			//limit the method call to 1, no less and no more calls are allowed
+			verify(calcService, times(1)).add(10.0, 20.0);
+			verify(calcService, never()).multiply(10.0,20.0);					--->	neither call
+			verify(calcService, times(3)).substract(10.0, 20.0);				--->	call 3 times
+	
+	--Varying Calls
+		Mockito provides the following additional methods to vary the expected call counts.
+			atLeast (int min) − expects min calls.
+			atLeastOnce () − expects at least one call.
+			atMost (int max) − expects max calls.
+				//check a minimum 1 call count
+				 verify(calcService, atLeastOnce()).subtract(20.0, 10.0);
+				  
+				//check if add function is called minimum 2 times
+				verify(calcService, atLeast(2)).add(10.0, 20.0);
+				  
+				//check if add function is called maximum 3 times
+				verify(calcService, atMost(3)).add(10.0,20.0);     
+
+					
