@@ -1,0 +1,177 @@
+SOLID Design Principles
+
+	Single Responsibility Principle (SRP)
+		A class only have the responsibility to do one pursose, no to do more, if the is desinged only for calculate operations, this must no have other methods or works
+		that does not belong to it, as save in file.
+		Separation of concerns - different classes handling different, independent tasks/problems
+		
+	Open-Closed Principle (OCP) + Specification
+		It is a code that is open for extencion but close for modification.
+		Means create a more generic class for doing a task, e.g. if you have a product class that have many properties as name, color, size and you create a filter class
+		the filter class have to be more generic using interfaces, create something like FilterBy and not FilterByColor.
+		
+	Liskov Substitution Principle (LSP)
+		You should be able to substitute a base type for a subtype
+		
+	Interface Segregation Principle (ISP)	
+		Dont put too much into an interface, split into separte interfaces
+		How to split interfaces in smaller interfaces. The interface have some methods that maybe not all are necesaries in a concrete class, so what we can do is split
+		the infteface in many interfaces in this way we can just implement that interfaces that have the neccesaries methods for the concrete class.
+	
+	Dependency Inversion Principle (DIP)
+		High level modules does not depend upon low level modules; use abstractions
+		
+
+
+
+Design Pattern
+	
+	Creational Desing Pattner
+
+		Builder
+			Some objects are simple and can be created in a single constructor call, but other objects require a lot of ceremony to create.
+			Use Builder Pattern to encapsulate the construcion of a product and allow it to be constructed in steps.
+				-Encapsule the way a complex object is constructed
+				-Allows objects to be constructed in a multisteps and varying process.
+				-Hides the internal representation of the product from the client
+			Fluent Interface 
+		
+		Factory
+			Object creation logic becomes too convoluted.
+			All factory patterns encapsulate object creation. 
+			The Factory Method Pattern encapsulates object creating by letting subclasses decide what object to create.
+			The Factory Method Pattern defines an interface for creating an object, but lets subclasses decide which class to instantiate. it lets a class defer instantiation to subclasses.
+			Constructor is not descriptive.
+			A factory method is a static method that creates objects
+			A factory can take care of object creation
+			A factory can be external or reside inside the object as an inner class
+		
+		Prototype
+			Complicated objects are not designed from scratch
+			An existing design is a prototype
+			We make a copy the prototype and customize it.
+			A partially or fully initialized object that you copy and make use of.
+			Instead of going to the trouble of creating object from scratch every time, you can make copies of an original instance and modify it as required.
+				Using cloneable interface
+					-implements cloneable to objects and sub objects to clone.
+					-override public Object clone() throws CloneNotSupportedException
+					-return the same object to clone, e.g. in Address object ---> return new Address("aa",21);
+						Person oscar = new Person("Oscar", new Address("Vista Montaña", 21));
+						Person tania = (Person)oscar.clone();
+				Using copy constructor
+					Employee oscar = new Employee("Oscar", new Address("Vista de la montaña", 21));
+					Employee tania = new Employee(oscar);
+	
+		Singleton
+			A component that is instantiated only once.
+			For some components it only makes sense to have one in the system
+				Database repository
+				Object Factory
+			e.g. The constructor call is expensive
+				we only do it once
+				We provide everyone with the same instance
+	
+	
+	Structure Design Pattern
+	
+		Adapter
+			A construct which adapts an existing interface X to conform to the required interface Y.
+			You are getting interface X for some system but other system required interface Y, you have to connect X to Y with a extra piece of code.
+			Converts the interface of a class into another interface the clients expect. Adapter lets classes work together that couldn't otherwise because of 
+			incompatible interfaces.
+		
+		Bridge
+			Connecting components together through abstractions.
+			A mechanism that decouples an interface (hierarchy) from an implementation (hierarchy)
+			Bridge decouples the abstraction from implementation so that the two can vary independently.
+			
+		Composite
+			Allows you to compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions
+			of objects uniformly.
+				Component
+					Declare interface for objects in compositions
+					Implements default behaviour for the interace common to all classes as appropriate.
+					Declares an interface for accessing and managing its child components
+				Leaf: 
+					Represent leaf objects in the composition. A leaf has no children.
+					Defines behaviour for primitive objects in the composition.
+				Composite
+					Defines behaviour for components having children.
+					Stores child components.
+					Implements child related operations in the component interface.
+				Client
+					manupulates objects in the composition through the component interface.
+		
+		Decorator
+			attaches additional responsibilities to an object dynamically.
+			Decoratos provide a flexible alternative to subclassing for extending functionality.
+			
+		Facade
+			We create a class that simpliifies and unifies a set of more complex classes that belong to some subsystem.
+			It provides a unified interface to a set of interfaces in a subsytem. Facade defines a higher leve interface that makes the subsytem easier to use.
+			Exposing several components through a single interface.
+			Build a Facade to provide a simplified API over a set of classes.
+			
+		Flyweight 
+			A space optimization technique that lets us use less memory by storing externally the data associated with similar objects.
+			Store common data externally.
+			This is used when we need to create a large number of similar objects. all this kind of objects are immutable.
+			It is used to reduce the number of objects created and to decrese memory footprint and increase performance.
+		
+		Proxy
+			A class that functions as an inteface to a particular resource. That resource may be remote, expensive to construct, or may require logging or some 
+			A class represents functionality of another class.
+			Use the proxy pattern to create a represetnattive object that controls access to another boject, which may be remote, expensive to create or in need of securiting.
+			Protection Proxy
+				to control access rights to an object.
+			Virtual proxy
+				handles the case where an object might be expensive to create
+			Remote proxy
+				controls access to a remote object.
+			Proxy vs decorator
+				*Proxy provides an identical inteface; decorator proves an enhanced interace.
+				*Decorator typically aggregates, proxy doesnot have to
+			
+	Behaivor Pattern
+		Chain of Responsibility
+			A chain of components who all get a chance to process a command or a query, optionally having default processing implementaion and an ability to determinate the processing chain.
+			This pattern decouples sender and receiver of a request based on type of request.
+			In this pattern, normally each receiver contains reference to other receiver. If one object cannot handle the request then it passes the same to the next reciever and so on.
+		
+		Command
+			An object which represents an instruction to perform a particular action. Contains all the information necessary for the action to be taken.
+			Encapsulate all details of an operation in a separate object.
+			Define instruction for applying the command.
+			Optionally define instructions for undoing the command.
+		
+	*Interpreter
+	
+		Iterator
+			An object that facilitates the traversal of a data structure.
+				keeps a reference to the current element
+				Know how to move to a different element 
+			Implement Iterator interface, normaly have hasNext() and Next()
+		
+		Mediator
+			A Component that facilitates communication between other components without them necessarily being aware of each other or having direct access to each other
+		
+	Memento
+		A token/handle representing the system state, Lets us roll back to the state when the token was generated. May or may not directly expose state information
+		Mementos are used to roll back states arbitrarily.
+		Can be used to implement undo/redo
+		
+	Null Object
+		
+		
+	Observer
+		We need to be informed when certain things happen
+			Object's field changes
+			Object does something
+			Some external event occurs
+		An observer is an object that wishes to be informed about evetns happening in the system.
+		
+	State
+		A pattern in which the object's behavior is determined by its state. An object transitions from one state to another.
+		
+	Template method
+		Allows us to define the skeleton fo the algorithm 
