@@ -1,0 +1,45 @@
+maven
+	Maven is a project management and comprehension tool that provides developers a complete build lifecycle framework.
+	POM stands for Project Object Model.
+	The POM contains information about the project and various configuration detail used by Maven to build the project(s).
+	All POM files require the project element and three mandatory fields: groupId, artifactId, version.
+	Projects notation in repository is groupId:artifactId:version.
+	
+	What is Build Lifecycle?
+		A Build Lifecycle is a well-defined sequence of phases, which define the order in which the goals are to be executed.
+		
+	Phase								Handles								Description
+prepare-resources					resource copying			Resource copying can be customized in this phase.
+validate						Validating the information		Validates if the project is correct and if all necessary information is available.
+compile									compilation				Source code compilation is done in this phase.
+Test									Testing					Tests the compiled source code suitable for testing framework.
+package									packaging				This phase creates the JAR/WAR package as mentioned in the packaging in POM.xml.
+install									installation			This phase installs the package in local/remote maven repository.
+Deploy									Deploying				Copies the final package to the remote repository.
+
+Creating mvn project
+	mvn archetype:generate
+	-DgroupId = com.companyname.bank 
+	-DartifactId = consumerBanking 
+	-DarchetypeArtifactId = maven-archetype-quickstart 
+	-DinteractiveMode = false
+	
+Build and test project
+	mvn clean package
+	
+External dependecy
+	in POM.xml
+	<dependency>
+         <groupId>ldapjdk</groupId>
+         <artifactId>ldapjdk</artifactId>
+         <scope>system</scope>
+         <version>1.0</version>
+         <systemPath>${basedir}\src\lib\ldapjdk.jar</systemPath>
+      </dependency>
+   </dependencies>
+	
+	External dependencies (library jar location) can be configured in pom.xml in same way as other dependencies.
+		Specify groupId same as the name of the library.
+		Specify artifactId same as the name of the library.
+		Specify scope as system.
+		Specify system path relative to the project location.

@@ -1,0 +1,478 @@
+React
+
+	
+	Elements
+		are the smallest building blocks of React apps. An element describes what you want to see on the screen, React elements are plain objects, 
+		and are cheap to create. React DOM takes care of updating the DOM to match the React elements.
+			const element = <h1>Hello, world</h1>;
+
+	Components
+		let you split the UI into independent, reusable pieces, and think about each piece in isolation. Conceptually, components are like JavaScript functions.
+		They accept arbitrary inputs (called “props”) and return React elements describing what should appear on the screen	
+		JavaScript functions that produces an html 
+	
+	Controlled Components
+		
+	
+	Functional Component
+		const SearchBar = () =>{
+			return (
+				<input />
+			};
+		}
+
+	Class Component
+		class SearchBar extends React.Component{
+			render(){
+				return <input />;
+			}
+		}
+	
+	Controller Views
+		react component that have child components
+		Top level react component, et props on children, interacts with store.
+	
+	State
+		Plain Java Script object that is used to record in react for user event.
+	
+	Lifecycle Methods to a Class
+		In applications with many components, it’s very important to free up resources taken by the components when they are destroyed.
+	
+		The componentDidMount() hook runs after the component output has been rendered to the DOM. 
+		The componentWillUnmount() hook run when the component is ever removed from the DOM.
+		
+	Lifecycle Methods
+		componentWillMount
+			Before initial render, both client and server, it is good spot to set initial state
+		componentDidMount
+			After render, Access DOM, integrate with frameworks, set timers, AJAX request
+		componentWillReceiveProps
+			When receiving new props. Not called on initial render, set state before a render.
+		shouldComponentUpdate
+			Before render when new props or state are being received. not called on initial render, for performance. return false to avoid unnecessary re-renders
+		componentWillUpdate
+			Inmediately before rendering when new props or state are being received. not called on initial render, for preparing for an update
+		componentDidUpdate
+			After component's updates are flushed to the DOM. not called for the initial render, for working with the DOM after an update
+		componentWillUnmount
+			Immediately before component is removed from the DOM, for cleaning up.
+	
+	Keys
+		Help React identify which items have changed, are added, or are removed. Keys should be given to the elements inside the array to give the elements 
+		a stable identity.
+		
+			When you don’t have stable IDs for rendered items, you may use the item index as a key as a last resort:
+				const todoItems = todos.map((todo, index) =>
+					<li key={index}>
+						{todo.text}
+					</li>
+				);
+				
+	PropTypes
+		is for propValidation
+			propTypes:{
+				author:			React.PropTypes.object.isRequierd,
+				onSave:			React.PropTypes.func.isRequierd,
+				validate:		React.PropTypes.func.isRequierd,
+				errors:			React.PropTypes.object,
+				hasErrors:		React.PropTypes.object.isRequierd,
+			},
+			
+	
+Redux
+	Three Principles
+		1 - Single source of truth
+				The state of your whole application is stored in an object tree within a single store.
+					A single state tree also makes it easier to debug or inspect an application.
+				Redux uses only one store for all its application state. Since all state resides in one place, Redux calls this the single source of truth.
+				
+		2 - State is read-only
+				The only way to change the state is to emit an action, an object describing what happened.
+					This ensures that neither the views nor the network callbacks will ever write directly to the state.
+				This means the application cannot modify the state directly. Instead, "actions" are dispatched to express an intent to change the state in the store.
+					
+		3 - Changes are made with pure functions
+				To specify how the state tree is transformed by actions, you write pure reducers.
+					Reducers are just pure functions that take the previous state and an action, and return the next state. Remember to return new state objects, 
+					instead of mutating the previous state.
+				As just described, Redux doesn't allow the application to make direct changes to the state. Instead, the dispatched action "describes" the state change and an intent to change state.
+	
+	Pure Function
+		Return values depends only in the value arguments.
+		Does not have side effects, if you call the pure function with the same input parameters you will always get the same output. 
+		Pure function does not modify the values pass to them. 
+	
+	Impure function
+		May call database
+		have side effect
+		May override values that you pass as param.
+	
+The Store
+	Store is the object that holds the application state and provides a few helper methods to access the state, dispatch actions and register listeners. The entire state 
+	is represented by a single store. Any action returns a new state via reducers. That makes Redux very simple and predictable.
+	In Redux there is a single store that holds all of the application state in one object. The store is also responsible for changing the state when something happens in 
+	our application.
+
+	The store holds the whole state of the application, receives actions, passes them to the reducer function to replace the state, and notifies us on every change. 
+	Basically, you could say that Redux is the store implementation.
+	
+	Creating a Store
+		To create the store we use the createStore() factory function exported by Redux. It accepts three arguments: a mandatory reducer function, 
+		an optional initial state, and an optional store enhancer.
+			import { createStore } from 'redux';					--->	Importing create Store
+
+			const initialState = {									--->	Declaring a initial state
+				recipes: [],
+				ingredients: []
+			}
+			const reducer = (state, action) => state;				--->	Creating simple reducer
+			const store = createStore(reducer, initialState);		--->	Creating the store
+			
+		Accessing the State
+			The getState() method returns the reference to the current state:
+				Get current state from store
+					store.getState();
+					
+		Sending action objects to reducers is done via the store using the store’s dispatch() method, which accepts a single argument, the action object:
+			Dispatch action to store
+				const action = { type: 'ADD_RECIPE', ... }
+				store.dispatch(action);
+		
+		Now we can rewrite our reducer to make it able to create an updated state for actions of type 'ADD_RECIPE' and return the current state otherwise:
+			Sample reducer code
+				const reducer(state, action) => {
+					switch (action.type) {
+						case 'ADD_RECIPE':
+							return Object.assign(...);
+						default:
+							return state;
+					}
+				};
+				
+		Listening to Updates
+			Now that we know how the store updates the state, we need a way to update the UI or other parts of our application when the state changes. 
+			The store allows us to subscribe to state changes using the subscribe() method. It accepts a callback function, which will be executed after every action
+			has been dispatched:
+
+			The subscribe method
+				const store = createStore((state) => state);
+				const onStoreChange = () => console.log(store.getState());
+				store.subscribe(onStoreChange);
+
+
+			The return value of the subscribe() method is a function that can be used to unsubscribe from the store. It is important to remember to call unsubscribe() 
+			for all subscriptions to prevent memory leaks:
+				Unsubscribing from store updates
+					const unsubscribe = store.subscribe(onStoreChange);
+					// When the subscription is no longer needed
+					unsubscribe();
+
+	The three states
+		Processes are asynchronous when they take a long time, such as AJAX calls to load some data. They usually have 3 states: pending, success, and error. Imagine it looking like this:	
+			store.dispatch({ type: 'LOAD_START' })
+			fetch('/data.json')
+				.then(data =>
+					store.dispatch({ type: 'LOAD_FINISH', data: data }))
+				.catch(error =>
+					store.dispatch({ type: 'LOAD_ERROR', error: error }))
+		Assuming fetch() returns a promise, we can use it to trigger store actions when something happens.
+	
+	redux-thunk is a plugin that will allow you to pass functions to dispatch(). Great for asynchronous actions.
+	
+Actions and Action Creators
+
+	Actions
+	
+		Actions are plain objects containing one required property, the type. The type is a unique key describing the action, and it is used by the receiving end to 
+		distinguish between actions.
+			Plain object-based Action
+			const action = { type: 'MARK_FAVORITE' };
+		
+		In Redux, we send actions to the store, which passes them to middleware and then to reducers. In order to notify a store about an action, we use the store’s 
+		dispatch() method.
+
+		You have a few options to access to the sotre's dipatch:
+			1. By holding a reference to the store
+			2. Inside middleware
+			3. Through methods provided by special libraries for different frameworks
+
+		Here’s a simple example for dispatching actions by holding a direct reference to the store:
+			Dispatching a simple action
+				import { store } from './lib/store';
+				store.dispatch({ type: 'MARK_FAVORITE' });
+		
+		Since actions in Redux are nothing more than objects, we are free to add as many properties as needed. The only limitation is that the type property is 
+		required by Redux:
+
+			Standard action object
+				store.dispatch({
+					type: 'MARK_FAVORITE',
+					recipeId: 21
+					…
+				});
+		
+		The object passed to dispatch() will be available to our reducers:
+			Accessing actions in reducers
+				function reducer(state, action) {
+					console.log(action);
+					return state;
+				}
+			// action -> { type: 'MARK_FAVORITE', recipeId: 21, ... }
+		
+		
+	Actions Creators
+		As our applications grow and develop, we will start encountering more and more code like this:
+			Direct object dispatch
+				dispatch({
+					type: 'ADD_RECIPE',
+					title: title.trim(),
+					description: description ? description.trim() : ''
+				});
+		
+		If we decide to use the same action in other places, we will end up duplicating the logic in multiple locations. Such code is hard to maintain, as we 
+		will have to synchronize all the changes between all the occurrences of the action.
+		A better approach is to keep the code in one place. We can create a function that will create the action object for us:
+			Function to create an action object
+				const addRecipe = (title, description = '') => ({
+					type: 'ADD_RECIPE',
+					title: title.trim(),
+					description:description.trim()
+				});
+		
+		Now we can use it in our code:
+			Using an action creator
+				dispatch(addRecipe(title, description);
+				
+		Any modification to the content or logic of the action can now be handled in one place: the action creation function, also known as the action creator.
+		
+	Flux Standard Actions
+		FSA object sample
+			const action = {
+				type,
+				error,
+				payload,
+				meta
+			};
+
+		Each field has a distinct role:
+			• type is the regular Redux action identifier.
+			• The error property is a Boolean that indicates whether the action is in an error state. The rationale behind this is that instead of having multiple 
+			  actions, like 'ADD_RECIPE_SUCCESS' and 'ADD_RECIPE_ERROR', we can have only one action, 'ADD_RECIPE', and use the error flag to determine the status.
+			• payload is an object holding all the information needed by the reducers. In our example, the title and description would both be passed as the 
+			  payload property of the action.
+			• The meta property holds additional metadata about the action that is not necessarily needed by the reducers, but could be consumed by middleware. 
+			  We will go into detail on how the meta property could be used in the Middleware Chapter.
+
+		Implemented as an FSA, our action looks like this:
+			FSA action example
+				store.dispatch({
+					type: 'ADD_RECIPE',
+					payload: {
+						title: 'Omelette',
+						description: 'Fast and simple'
+					}
+				});;
+				
+		FSA action in error state
+			const action = {
+				type: 'ADD_RECIPE',
+				error: true,
+				payload: new Error('Could not add recipe because...')
+			};
+	
+	String Constants
+		it help us to:
+			1. Spelling mistakes
+				If we spell the same string incorrectly in the action or the reducer, our action will fire but result in no changes to the state. Worst of all, 
+				this will be a silent failure without any message to indicate why our action failed to produce its desired effect.
+			2. Duplicates
+				Another developer, in a different part of the code base, might use the same string for an action. This will result in issues that are very hard 
+				to debug, as our action will suddenly cause that developer’s reducers to fire as well, creating unexpected changes to the state.
+	
+		To avoid these issues, we need to ensure a unique naming convention for our actions to allow both action creators and reducers to use the exact same keys.
+			constants/action-types.js
+				export const MARK_FAVORITE = 'MARK_FAVORITE';
+				export const ADD_RECIPE = 'ADD_RECIPE';
+
+
+Reducers
+	it takes the previous state and the action been dispatch and return the next state of your application, without modify the state given to it, it creates a new one.
+	reducers create a new state out of the old one, based on an action.
+	In essence, a reducer is a simple JavaScript pure function that receives two parameters (two objects) and returns an object (a modified copy of the first argument)
+		 A typical reducer looks like this:
+			Basic reducer
+				function reducer(state, action) {
+					switch (action.type) {
+						case 'ADD_RECIPE':
+							// Create new state with a recipe
+						case 'ADD_INGREDIENT':
+							// Create new state with a recipe
+						default:
+							return state;
+					}
+				}
+	In Redux, reducers are the final stage in the unidirectional data flow. After an action is dispatched to the store and has passed through all the middleware, 
+	reducers receive it together with the current state of the application. Then they create a new state that has been modified according to the action and return 
+	it to the store.
+	
+	
+	Reducer Separation
+		What’s more, each of the reducers only needs to know about its part of the state, and they have no dependency on each other. For example, the recipes reducer 
+		only handles recipe management, like adding and removing recipes, and doesn’t care about how ingredients or the UI states are managed.
+		
+		Following this separation of concerns, we can put each reducer into a different file and have a single root reducer manage all of them. Another side effect of 
+		this approach is that the root reducer will pass each of its children only the part of the state that it cares about (e.g., the ingredients reducer will only 
+		get the ingredients substate of the store). This ensures the individual reducers can’t “break out” out of their encapsulation.
+
+		Recipes reducer
+			const initialState = [];
+			export default function recipesReducer(recipes = initialState, action) {
+				switch (action.type) {
+					case ADD_RECIPE:
+						return [...recipes, action.payload];
+					...
+				}
+			}
+		
+		Ingredients reducer
+			const initialState = [];
+			export default function ingredientsReducer(ingredients = initialState, action) {
+				switch (action.type) {
+					case ADD_INGREDIENT:
+						return [...ingredients, action.payload];
+					...
+				}
+			}
+			
+		Course reducer
+			const initialState = [];
+			export default function courseReducer(course = initialState, action) {
+				switch (action.type) {
+					case 'CREATE_COURSE':
+						return [...course, action.payload];
+					...
+				}
+			}
+
+		Root reducer
+			import recipesReducer from 'reducers/recipes';
+			import ingredientsReducer from 'reducers/ingredients';
+
+			const rootReducer = (state = {}, action) => Object.assign({}, state, {
+				recipes: recipesReducer(state.recipes, action),
+				ingredients: ingredientsReducer(state.ingredients, action)
+				course: courseReducer(state.course, action)
+			});
+
+			export default rootReducer;
+			
+	Combining Reducers
+		This technique of reducer combination is so convenient and broadly used that Redux provides a very useful function named combineReducers() to facilitate it. 
+		This helper function does exactly what rootReducer() did in our previous example, with some additions and validations:
+		
+		Root reducer using combineReducers()
+			import { combineReducers } from 'redux';
+			import recipesReducer from 'reducers/recipes';
+			import ingredientsReducer from 'reducers/ingredients';
+			import courses from 'reducers/courseReducer';
+
+			const rootReducer = combineReducers({
+				recipes: recipesReducer,
+				ingredients: ingredientsReducer,
+				course: courseReducer
+			});
+			export const store = createStore(rootReducer);
+
+	React-Redux Provider
+		It wraps your application top level component,your pass the store Make your store available for all your components automatically.
+			<Provier store={this.props.store}>
+				<App/>
+			</Provider>
+	
+	React-Redux connect
+		wraps your components to connect redux store.
+			export default connect(mapStateToProps,mapDispatchToProps)(CoursesPage)
+			
+	mapStateToProps	
+		function mapStateToProps(state, ownProps){
+				return { 
+					courses: state.courses 			--->	"courses" a given name, can be any you want
+				};									--->	"state.courses" make reference to the reducer what we defined in the CombineReducer
+		}												
+	mapDispatchToProps
+		function mapDispatchToProps(dispatch){
+			return{
+				createCourse: course => dispatch(courseActions.createCourse(course))	--->	"createCourse" a given name can be any
+			};																			--->	"courseActions.createCourse(course)" where is the action
+		}	
+		
+	bindActionCreators	
+		Go for all action and and wrape it
+		function mapDispatchToProps(dispatch){
+			return{
+				actions: bindActionCreators(courseActions,dispatch)			--->	"actions" a given name can be any, it hold all action in specific file
+			};																--->	"courseActions" where is the actions
+		}
+		
+		function mapDispatchToProps(dispatch){
+			return{
+				createCourse: bindActionCreators(courseActions.createCourse,dispatch)	--->	"createCourse" a given name can be any, it hold a specific action
+			};																			--->	"courseActions.createCourse" specific action to hold
+		}
+		
+The Form Component
+	Install it	
+		npm install --save redux-form
+	Add it in the reducers
+		import { reducer as formReducer } from 'redux-form';
+		
+		const rootReducer = combineReducers({
+			form:formReducer
+		});
+	
+	Use it
+		import {Field, reduxForm} from 'redux-form';
+		
+		<form >
+            <Field
+              name="title",
+              component={}
+            />
+        </form>
+		
+		export default reduxForm({
+			form:'PostsNewForm'
+		})(PostsNew);	
+		
+		
+	States from the fields
+		imprime		touch		invalid
+		
+	BrowserRouter, Route, Swtich
+		import {BrowserRouter, Route, Switch} from 'react-router-dom';
+		import PostsIndex from './components/posts_index';
+		import PostsNew from './components/posts_new';
+		import PostsShow from './components/posts_show';
+
+		
+		ReactDOM.render(
+		  <Provider store={createStoreWithMiddleware(reducers)}>
+			<BrowserRouter>
+			  <div>
+				<Switch>
+				  <Route path="/posts/new" component={PostsNew}/>
+				  <Route path="/posts/:id" component={PostsShow}/>
+				  <Route path="/" component={PostsIndex}/>
+				</Switch>
+			  </div>
+			</BrowserRouter>
+		  </Provider>
+		  , document.querySelector('.container'));
+		  
+	Link
+		<Link to="/" className="btn btn-danger">Cancel</Link>
+		
+		do a redirect programatically
+			this.props.history.push('/')
+		get a parameter 
+			this.props.match.params.id;
