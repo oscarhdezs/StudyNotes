@@ -1,4 +1,4 @@
-﻿Spring
+Spring
 
 		Spring 				JSR 								Comment
 	@Component 				@Named 						@Named can be used instead of all stereotype annotations except
@@ -1280,3 +1280,244 @@
 				}
 			
 			}
+			
+	-Spring Data JPA
+		@EnableJpaRepositories tells Spring that it must create repository instances
+		@NoRepositoryBean is used to exclude repository interfaces from being picked up, and repository instances will not be created for them.
+		@RepositoryDefinition will expose a complete set of methods to manipulate entities. similar to extends Repository<T,ID extdns Serializable>
+		A repository interface defined by a developer will extend one of the interfaces in the Repository<T,ID extends Serializable> hierarchy
+		
+		--Configuration
+			@Configuration
+			@EnableJpaRepositories(basePackages = {"com.ps.repos"})
+			@Import(DataSourceConfig.class)
+			public class PersistenceConfig {
+				@Autowired
+				DataSource dataSource;
+		
+			}
+			
+			public interface UserRepo extends JpaRepository<User, Long> {
+				@Query("select u from User u where u.username like %?1%")
+				List<User> findAllByUserName(String username);
+			
+			// using named parameters
+				@Query("select u from User u where u.username= :un")
+				User findOneByUsername(@Param("un") String username);
+
+				@Query("select u.username from User u where u.id= :id")
+				String findUsernameById(Long id);
+
+				@Query("select count(u) from User u")
+				long countUsers();
+			}
+			
+	-Spring Web
+	
+		http://localhost:8080/mvc-basic/showUser?userId=105
+		@Controller
+		@RequestMapping("/users")
+		public class UserController {
+			@RequestMapping(value = "/showUser", method = RequestMethod.GET)		
+			public String show(@RequestParam("userId") Long id, Model model) {		--->	RequestParam to the parameters in the url
+				...
+			}
+		}
+		
+		http://localhost:8080/mvc-basic/users/105
+		@Controller
+		@RequestMapping("/users")
+		public class UserController {
+			@RequestMapping(value = "/{userId}", method = RequestMethod.GET)
+			public String show(@PathVariable("userId") Long id, Model model) {		--->		PathVariable to get the variable in the url
+				...
+			}
+		}
+		
+		-XML configuration
+			<mvc:annotation-driven/> element, which registers all necessary default infrastructure beans for a web application to work: 
+				handler mapping, validation, conversion beans, and many others.
+			
+		-Java Configuration for Spring MVC
+			@EnableWebMvc is the same as <mvc:annotation-driven/>
+			
+			public class WebInitializer implements WebApplicationInitializer {
+				@Override
+				public void onStartup(ServletContext servletContext) throws ServletException {
+					ServletRegistration.Dynamic registration = servletContext.addServlet("pet-dispatcher", new DispatcherServlet());
+					registration.setLoadOnStartup(1);
+					registration.addMapping("/");
+					registration.setInitParameter("contextConfigLocation","/WEB-INF/spring/mvc-config.xml");
+				}
+			}
+			
+			There are many ways to write a configuration using Java Configuration classes as well, but only the most common way will be depicted here, 
+			namely extending the AbstractAnnotationConfigDispatcherServletInitializer class:
+			
+				public class WebInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+					@Override
+					protected Class<?> getRootConfigClasses() {
+						return new Class<?>{ServiceConfig.class	};
+					}
+					
+					@Override
+					protected Class<?> getServletConfigClasses() {
+						return new Class<?>{WebConfig.class};
+					}
+					
+					@Override
+					protected String getServletMappings() {
+						return new String{"/"};
+					}
+					
+					@Override
+					protected Filter getServletFilters() {
+						CharacterEncodingFilter cef = new CharacterEncodingFilter();
+						cef.setEncoding("UTF-8");
+						cef.setForceEncoding(true);
+						return new Filter{new HiddenHttpMethodFilter(), cef};
+					}
+				}
+				
+	-Spring Security
+		To configure Spring security, the developer must take care of three things:
+			• declare the security filter for the application
+			• define the Spring Security context
+			• configure authentication and authorization
+			
+		XML Configuration
+			<web-app ...>
+				<!-- The root web application context is the security context-->
+				<context-param>
+					<param-name>contextConfigLocation</param-name>
+					<param-value>
+						/WEB-INF/spring/security-config.xml
+					</param-value>
+				</context-param>
+				<!-- Bootstraps the root web application context before servlet initialization -->
+				<listener>
+					<listener-class>
+						org.springframework.web.context.ContextLoaderListener
+					</listener-class>
+				</listener>
+				<filter>
+					<filter-name>springSecurityFilterChain</filter-name>
+					<filter-class>
+						org.springframework.web.filter.DelegatingFilterProxy
+					</filter-class>
+				</filter>
+				<filter-mapping>
+					<filter-name>springSecurityFilterChain</filter-name>
+					<url-pattern>/*</url-pattern>
+				</filter-mapping>
+			</web-app>
+		
+		
+		Java Configuration
+			@Configuration
+			@EnableWebSecurity
+			@EnableGlobalMethodSecurity(jsr250Enabled = true)
+			public class SecurityConfig extends WebSecurityConfigurerAdapter {
+			
+				@Autowired
+				public void configureGlobal(AuthenticationManagerBuilder auth) {
+					try {
+						auth.inMemoryAuthentication()
+							.withUser("john").password("doe").roles("USER").and()
+							.withUser("jane").password("doe").roles("USER","ADMIN").and()
+							.withUser("admin").password("admin").roles("ADMIN");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			
+				@Override
+				protected void configure(HttpSecurity http) throws Exception {
+					http.addFilterAfter(SecurityContextPersistenceFilter.class, customConcurrencyFilter());
+					http
+						.authorizeRequests()
+						.antMatchers("/user/edit").hasRole("ADMIN")
+						.antMatchers("/**").hasAnyRole("ADMIN","USER")
+						.anyRequest()
+						.authenticated()
+						.and()
+					.formLogin()
+						.usernameParameter("username") // customizable
+						.passwordParameter("password") // customizable
+						.loginProcessingUrl("/login") // customizable
+						.loginPage("/auth")
+						.failureUrl("/auth?auth_error=1")
+						.defaultSuccessUrl("/home")
+						.permitAll()
+						.and()
+					.logout()
+						.logoutUrl("/logout")
+						.logoutSuccessUrl("/")
+					.and()
+					.csrf().disable();
+				}
+				
+				@Bean
+				CustomConcurrentSessionFilter customConcurrencyFilter(){
+					return new CustomConcurrentSessionFilter();
+				}
+			}
+			
+		Spring XML Configuration without web.xml
+			// Empty class needed to register the springSecurityFilterChain bean
+			public class SecurityInitializer extends AbstractSecurityWebApplicationInitializer {
+			
+			}
+			
+	-Spring Boot
+		with maven
+			spring-boot-starter-parent
+		
+		
+		@SpringBootApplication(scanBasePackages =
+		{"com.ps.web", "com.ps.start"})
+		public class Application {
+			public static void main(String... args) {
+				SpringApplication.run(Application.class, args);
+				System.out.println("Started ...");
+			}
+		}
+		
+		application.properties
+			app.port=8080
+			app.context=/ps-boot
+			
+	-Spring Rest
+		Using the @RequestMapping annotation introduced in the previous chapter, HTTP REST requests can be mapped to controllers.
+		Although annotated with the stereotype annotation @Controller, their methods do not return results that can be mapped to a view, but to a representation.
+		The DispatcherServlet is notified that the result of the execution of a controller does not have to be mapped to a view by annotating the method with @ResponseBody.
+		When you use @Controller for Spring rest you must specify the @ResponseBody in the method.
+		@ResponseStatus(HttpStatus.CREATED) for specifying the status code 
+		
+		HTTP METHODS	@RequestMapping													Spring 4.3 Annotation
+				GET 		@RequestMapping(method=RequestMethod.DELETE) 					@GetMapping
+				POST 		@RequestMapping(method=RequestMethod.POST) 						@PostMapping
+				DELETE 		@RequestMapping(method=RequestMethod.DELETE) 					@DeleteMapping
+				PUT 		@RequestMapping(method=RequestMethod.PUT) 						@PutMapping
+		
+		
+		@RestController
+		public class RestUserController {
+			@ResponseStatus(HttpStatus.OK)
+			@RequestMapping(value = "/users/{$username}",
+			method = RequestMethod.PUT,
+			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+			public User updateByEmail(
+				@PathVariable("$username") String username,
+				@RequestBody User newUser) throws UserException {
+				
+				User user = userService.findByUsername(username);
+				if (user == null) {
+					throw new UserException("User not found with username " + username);
+				}
+
+				return user;
+			}
+
+		}
