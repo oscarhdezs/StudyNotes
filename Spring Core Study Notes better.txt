@@ -1,0 +1,2017 @@
+Spring
+	-Xml configuration file
+	-Java Annotations
+	-Java Source Code
+	
+XML Configuration file
+	-configure xml file
+		<?xml version="1.0" encoding="UTF-8"?>
+		<beans ....
+			<!-- Define your beans here -->
+	
+			<bean id="myCoach" class="com.oscar.springdemo.BaseballCoach"/> 	--->   BaseballCoach myCoach = new BaseballCoach()
+
+		</beans>
+		
+	-create container
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+		Coach track = context.getBean("myCoach",Coach.class);
+		System.out.println(track.getDailyWorkout());
+		context.close();
+		
+Dependency Injection
+	-Constructor Injection
+	-Setter Injection
+	-Auto-wiring
+	
+-Constructor Injection
+	-Define a private field for the dependency
+	-Define a constructor for dependency injection
+		public class BaseballCoach implements Coach{
+
+			private FortuneService fortuneService;
+	
+			public BaseballCoach(FortuneService fortuneService) {
+				this.fortuneService = fortuneService;
+			}
+	
+			public String getDailyWorkout() {
+				return "spend 30 minutes on batting practice";
+			}
+			
+			public String getDailyFortune() {
+				return fortuneService.getFortune();
+			}
+		}
+		
+	-Configure the spring bean
+		-Define the dependency bean
+		-set up the constructor injection
+		<beans .....
+			<!-- Define your beans here -->
+			<bean id="myFortuneService" class="com.oscar.springdemo.HappyFortune"/>	--->	Define the dependency
+																					---> HappyFortune myFortuneService = new HappyFortune();
+			<bean id="myCoach" class="com.oscar.springdemo.BaseballCoach">
+				<constructor-arg ref="myFortuneService"/>					---> Inject the dependency using "Constructor Injection" have to use the id
+			</bean> 														---> BaseballCoach myCoach = new BaseballCoach(myFortuneService);
+		</beans>
+		
+-Setter Injection
+	Inject dependencies by calling setter method(s) on your class
+		1- Create setter method(s) in your class for injections
+			public class VolleyBallCoach implements Coach{
+				private FortuneService fortuneService;				--->	Object to inject
+
+				@Override
+				public String getDailyWorkout() {
+					return "do 10 min. of set";
+				}
+
+				@Override
+				public String getDailyFortune() {
+					// TODO Auto-generated method stub
+					return "your fortune for volley is:"+fortuneService.getFortune();
+				}
+				
+				public void setFortuneService(FortuneService fortuneService) {		--->	Called by Spring during setter injection
+					this.fortuneService = fortuneService;
+				}
+			}
+		2- Configure the dependency injection in Spring conf file
+			<beans ...
+				<!-- Define your beans here -->
+				<bean id="myFortuneService" class="com.oscar.springdemo.HappyFortune"/>		---> 	Define the dependency
+																							--->	HappyFortune myFortuneService = new HappyFortune();
+				<bean id="volleyCoach" class="com.oscar.springdemo.VolleyBallCoach">		--->	VolleyBallCoach volleyCoach = new VolleyBallCoach();
+					<property name="fortuneService" ref="myFortuneService"/>				--->	The id bean defined goes in ref
+				</bean>																		---> 	The property name must be the same as in the setter
+			</beans>																		--->	volleyCoach.setFortuneService(myFortuneService);
+			
+-Injecting values from Properties File
+	1- Create the properties File
+		File:data.properties
+			email=oscar.hdez.s@gmail.com				--->	Name and value for the property
+			team=Club FC America
+	2- Load Properties File in Spring config file & Reference values from Properties File
+		<beans ...
+			<context:property-placeholder location="classpath:data.properties"/>	--->	Load the property file in memory
+
+			<!-- Define your beans here -->
+			<bean id="myFortuneService" class="com.oscar.springdemo.HappyFortune"/>
+			
+			<bean id="volleyCoach" class="com.oscar.springdemo.VolleyBallCoach">
+				<property name="fortuneService" ref="myFortuneService"/>
+				<property name="emailAddress" value="${email}"/>					--->	Reference the values from Properties File
+				<property name="team" value="${team}"/>								--->	use the name of the property inner ${}
+			</bean>
+		</beans>
+
+	
+-BeanScope
+	Singleton is the default scope
+		Create only one instance of the bean.
+		It is cached in memory
+		All requests for the bean will return a SHARED reference to the SAME bean.
+	Prototype
+		Creates a new bean instance for each container request.
+	Request
+		Scoped to an HTTP web request. Only used for web apps.
+	Session
+		Scoped to an HTTP web session. Only used for web apps.
+	global-session
+		Scoped to a global HTTP web session. Only used for web apps.
+		
+	-Define the scope in the xml configuration file
+		<bean id="volleyCoach" class="com.oscar.springdemo.VolleyBallCoach" 
+			scope="singleton" || scope="prototype" || scope="request" || scope="session">
+		</bean>
+		
+-Bean Lifecycle
+	Container Started	--->	Bean Instantiated	--->	Dependency Injected	--->	Internal Spring Processing	--->	Your Custom Init Method
+	-You can add custom code during bean initialization
+	-You can add custom code during bean destruction
+	
+	-Using configuration file
+		When using XML configuration
+			Access modifier
+				The method can have any access modifier (public, protected, private)
+
+			Return type	
+				The method can have any return type. However, "void' is most commonly used. 
+
+			Method name
+				The method can have any method name.
+
+			Arguments
+				The method can not accept any arguments. The method should be no-arg.
+	
+			For "prototype" scoped beans, Spring does not call the destroy method. 
+	
+		-Configure methods names in Spring config file
+			<bean id="volleyCoach" class="com.oscar.springdemo.VolleyBallCoach"
+				init-method="doStartup" destroy-method="doCleanup">
+			</bean>
+		-Define your methods for init add destroy
+			public void doStartup() {					--->	Method name must match with the name defined in the xml file
+				System.out.println("In startup...");
+			}
+	
+			public void doCleanup() {					--->	Method name must match with the name defined in the xml file
+				System.out.println("In cleanup...");
+			}
+
+	<context:annotation-config/> 
+		activates various annotations to be detected in bean classes: Spring’s @Required and @Autowired, JSR 250’s @PostConstruct, @PreDestroy, and @Resource and a few others.	
+	<context:component-scan /> 
+		extends <context:annotation-config/> is more practical to use because it supports a lot of attributes for filtering and reducing scope of scanning.		
+		
+-Java Annotations
+	
+	Spring 					JSR 											Comment
+	@Component 				@Named 						@Named can be used instead of all stereotype annotations except
+	@Configuration			@Qualifier 					@Qualifier JSR Qualifier is a marker annotation used to identify qualifier annotations, like @Named, for example
+	@Autowired 				@Inject 					@Inject may apply to static as well as instance members
+	@Autowired + @Qualifier @Resource(name="beanName") 	@Resource is useful because replaces two annotations.
+
+	-Inversion Of Control
+	-For using annotation in Spring you have to follow the next steps
+		1. Enable component scanning in Spring config file
+			<beans ...																			Spring will scan this package recursively
+				<context:component-scan base-package="com.oscar.springdemo.withScan"/>	--->	identify the components that have the annotations
+			</beans>																			on it and automatically register them on spring container
+		2. Add the @Component Annotation to your Java classes	
+			@Component("tennisCoach")										--->	Annotation that say to spring this class is a special spring bean
+			public class TennisCoach implements Coach{						--->	You give the spring bean id, if you dont provide the bean id name
+				@Override													--->	it takes the name of the class with the first letter in lower-case
+				public String getDailyWorkout() {
+					return "do 5 ace set";
+				}
+			}
+		3. Retrieve bean from Spring container
+			ClassPathXmlApplicationContext context = 
+			new ClassPathXmlApplicationContext("applicationContextWithScan.xml");
+			Coach tCoach = context.getBean("tennisCoach",Coach.class); 		--->	Then bean id name that you set in your class
+		
+	Spring will scan your java classes for special annotations
+	Automatically register the beans in the Spring container for that classes that contain special annotations
+	
+	-Spring Dependency Injection with Annotations and Autowiring
+		Autowiring & Qualifiers
+			Spring will look for a class that matches the property, matches by type: class or interface
+			Spring will inject automatically ... hence it is autowired.
+			Spring will scan @Components, is any one implements FortuneService interface? if so, let's inject them. e. g. HappyFortuneService
+			
+			-Constructor Injection 
+				1. Define the dependency interface and class
+					public interface FortuneService {				--->		Defining the interfaz
+						String getFortune();
+					}
+					
+					@Component														--->	Spring autoscan and find this implementation and define spring bean
+					public class HappyFortuneService implements FortuneService{		--->	Implementing the interface
+						@Override
+						public String getFortune() {
+							return "Today is a very nice day";
+						}
+					}
+				2. Create a constructor in your class for injections & Configure the dependency injection with @Autowired Annotation
+					@Component
+					public class SoccerCoach implements Coach{
+						private FortuneService fortuneService;
+						
+						@Autowired												--->	do the autowiring, Spring will find a bean that implements
+						public SoccerCoach(FortuneService fortuneService) {		--->	FortuneService, it scan all the components and find the component
+							this.fortuneService = fortuneService;				--->	that implement FortuneService interface, take that bean and inject it
+						}
+						
+						@Autowired												--->	do the autowiring, Spring will find a bean that implements
+						public SoccerCoach(@Qualifier("randomFortuneService")FortuneService fortuneService) {		--->	FortuneService, it scan all the components and find the component
+							this.fortuneService = fortuneService;				--->	that implement FortuneService interface, take that bean and inject it
+						}
+						
+						@Override
+						public String getDailyFortune() {
+							return fortuneService.getFortune();
+						}
+					}
+			-Setter Injection
+				1. Define the dependency interface and class
+					public interface FortuneService {				--->		Defining the interfaz
+						String getFortune();
+					}
+					
+					@Component														--->	Spring autoscan and find this implementation and define spring bean
+					public class HappyFortuneService implements FortuneService{		--->	Implementing the interface
+						@Override
+						public String getFortune() {
+							return "Today is a very nice day";
+						}
+					}
+				2. Create a setter in your class for injections & Configure the dependency injection with @Autowired Annotation
+					@Component
+					public class GymCoach implements Coach{
+						private FortuneService fortuneService;
+						
+						@Autowired												--->	do the autowiring, Spring will find a bean that implements
+						@Qualifier("randomFortuneService")						--->	When we have more implementations of FortuneService
+						public void setFortuneService(FortuneService fortuneService) {	--->	FortuneService, it scan all the components and find the component
+							this.fortuneService = fortuneService;				--->	that implement FortuneService interface, take that bean and inject it
+						}
+						@Override
+						public String getDailyFortune() {
+							return fortuneService.getFortune();
+						}
+					}
+					*Note you can use any method name, just have to have in the paramenter the Interface to inject.
+			-Field Injections
+				Configure the dependency injection with Autowired Annotation, applied directly to the field, no need for setter methods
+				1. Define the dependency interface and class
+					public interface FortuneService {				--->		Defining the interfaz
+						String getFortune();
+					}
+					
+					@Component														--->	Spring autoscan and find this implementation and define spring bean
+					public class HappyFortuneService implements FortuneService{		--->	Implementing the interface
+						@Override
+						public String getFortune() {
+							return "Today is a very nice day";
+						}
+					}
+				2. Create a setter in your class for injections & Configure the dependency injection with @Autowired Annotation
+					@Component
+					public class GymCoach implements Coach{
+						@Autowired									--->	do the autowiring, Spring will find a bean that implements
+						@Qualifier("randomFortuneService")			--->	When we have more implementations of FortuneService
+						private FortuneService fortuneService;			--->	FortuneService, it scan all the components and find the component
+																	--->	that implement FortuneService interface, take that bean and inject it
+						@Override
+						public String getDailyFortune() {
+							return fortuneService.getFortune();
+						}
+					}
+	-Bean Scope		
+		@Component
+		@Scope("prototype")									--->	you define the scope here (singleton/prototype/session/request/global-session)
+		public class GymCoach implements Coach{
+			@Autowired									
+			private FortuneService fortuneService;		
+				@Override
+				public String getDailyFortune() {
+					return fortuneService.getFortune();
+				}
+		}
+		
+	-Bean Lifecycle
+		1- Define your methods for init and destroy & add annotations:@PostConstruct and @PreDestroy
+			@Component
+			public class GymCoach implements Coach{
+				
+				@PostConstruct									--->	Init method
+				private void doInit() {
+					System.out.println("Initializing things");
+				}
+				
+				@PreDestroy										--->	Destroy method
+				private void doDestroy() {
+					System.out.println("Cleaning up...");
+				}
+			}
+		
+		
+Java Source Code
+	-With ComponentScan annotation
+		-Create a java class and annotate as @Configuration
+			@Configuration										--->	Define that is a configuration file for spring
+			@ComponentScan("com.oscar.springdemo.beans")		--->	Specify the package where find the components bean
+			public class SportConfigWithComponentScan {
+	
+			}
+			
+		-Declare the beans
+			@Component
+			public class LuckyFortuneService implements FortuneService{
+				@Override
+				public String getFortune() {
+					return "Today is a great day!!!";
+				}
+			}
+
+			@Component
+			public class CrossfitCoach implements Coach{
+				@Autowired
+				FortuneService fortuneService;
+				@Override
+				public String getDailyWorkout() {
+					return "Do an EMON";
+				}
+				@Override
+				public String getFortune() {
+					return fortuneService.getFortune();
+				}
+			}
+
+			
+		-Read Spring Java configuration class & Retrieve bean
+			public class JavaConfigDemoApp {
+				public static void main(String[] args) {
+					AnnotationConfigApplicationContext context = 			--->		Read the spring java config file.
+					new AnnotationConfigApplicationContext(SportConfigWithComponentScan.class);
+		
+					Coach crossCoach = context.getBean("swimCoach",Coach.class);
+		
+					context.close();
+				}
+			}
+
+	-Without ComponentScan annotation
+		-Create a java class and annotate as @Configuration
+			@Configuration
+			public class SportConfigWithoutComponentScan {
+
+				@Bean 										--->		Register the bean
+				FortuneService niceFortuneService() {		--->		The method name is the bean Id
+					return new NiceFortuneService();
+				}
+
+				@Bean										--->		Register the bean
+				public Coach swimCoach() {					--->		The method name is the bean id
+					return new SwimCoach(niceFortuneService());		--->	Inject the dependency in the constructor
+				}
+			}
+			
+		-Declare the beans
+			*No any special annotation is needed (Component, Autowired)
+			public class NiceFortuneService implements FortuneService{
+				@Override
+				public String getFortune() {
+					return "You will have a nice Fortune today";
+				}
+			}
+			
+			public class SwimCoach implements Coach{
+				FortuneService fortuneService;
+				public SwimCoach(FortuneService fortuneService) {
+					super();
+					this.fortuneService = fortuneService;
+				}
+				@Override
+				public String getDailyWorkout() {
+					return "do 200 mts as fast as possible";
+				}
+				@Override
+				public String getFortune() {
+					return fortuneService.getFortune();
+				}
+			}
+			
+	-Read Spring Java configuration class & Retrieve bean from Spring container
+		public class JavaConfigDemoApp {
+			public static void main(String[] args) {
+				AnnotationConfigApplicationContext context = 		--->		Read the spring java config file.
+				new AnnotationConfigApplicationContext(SportConfigWithoutComponentScan.class);
+				
+				Coach crossCoach = context.getBean("swimCoach",Coach.class);
+				
+				System.out.println(crossCoach.getDailyWorkout());
+				System.out.println(crossCoach.getFortune());
+				
+				context.close();
+			}
+		}
+		
+	-Inject values from Properties File
+		@Configuration
+		@PropertySource("classpath:data.properties")		--->	Load the property file since annotation
+		public class SportConfigWithoutComponentScan {
+			@Bean FortuneService niceFortuneService() {
+				return new NiceFortuneService();
+			}
+			@Bean
+			public Coach swimCoach() {
+				return new SwimCoach(niceFortuneService());
+			}
+		}
+		
+		public class SwimCoach implements Coach{
+
+			@Value("${email}")							--->	Inject the value from Property File
+			private String email;
+			@Value("${team}")							--->	Inject the value from Property File
+			private String team;
+		}
+		
+	-Bean life cicle
+		public class ExampleBean implements InitializingBean, DisposableBean {		--->		implements InitializingBean and DisposableBean
+			public void afterPropertiesSet() throws Exception{						--->		implements its method
+				// do some initialization work
+			}
+
+			public void destroy() throws Exception{									--->		implements its method
+				// do some destruction work
+			}
+		}
+	
+	-Bean life Cycle
+		Spring framework provdies 4 ways for controlling life cycle eventos ofa bean:
+			1- InitializingBean and DisposableBean callback interfaces
+			2- Aware interfaces for specific behavior
+			3- Custom init() adn destroy() methods in bean configuration file
+			4- @PostConstruct and @PreDestroy annotation
+			
+	-BeanPostProcessor
+		The BeanPostProcessor interface defines callback methods that you can implement to provide your own instantiation logic, dependency-resolution logic etc.		
+			public class PostCallBack implements BeanPostProcessor{
+				@Override
+				public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+					System.out.println("BeforeInitialization : " + beanName);
+					return bean;  // you can return any other object as well
+				}
+
+				@Override
+				public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+					System.out.println("AfterInitialization : " + beanName);
+					return bean;  // you can return any other object as well
+				}
+			}
+			<bean class="com.oscar.spring.beans.PostCallBack"/>
+			
+	-Stereotype
+		By default, <context:component-scan> looks for classes that are annotated with one of a handful of special stereotype annotations:
+		Stereotypes annotations are used to mark classes according to their purpose:
+
+			@Component: template for any Spring-managed component(bean).
+			@Repository: template for a component used to provide data access, specialization of the @Component annotation for the the Dao layer.
+			@Service: template for a component that provides service execution, specialization of the @Component annotation for the Service layer.
+			@Controller: template for a web component, specialization of the @Component annotation for the Web layer.
+			@Cofiguration: configuration class containing bean definitions (methods annotated with @Bean).
+
+			@Component 	—	A general-purpose stereotype annotation indicating that the class is a Spring component
+			@Controller —	Indicates that the class defines a Spring MVC controller
+			@Repository	—	Indicates that the class defines a data repository
+			@Service	—	Indicates that the class defines a service
+			Any custom annotation that is itself annotated with @Component
+
+			
+Spring MVC
+	-Configure front controller in web.xml
+	<web ...>
+		<servlet>
+			<servlet-name>dispatcher</servlet-name>
+			<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+			<init-param>
+				<param-name>contextConfigLocation</param-name>
+				<param-value>/WEB-INF/spring-servlet.xml</param-value>
+			</init-param>	
+		</servlet>
+		<servlet-mapping>
+			<servlet-name>dispatcher</servlet-name>
+			<url-pattern>/</url-pattern>
+		</servlet-mapping>
+	</web>
+	
+	--without xml
+		public class WebInitializer implements WebApplicationInitializer {
+			@Override
+			public void onStartup(ServletContext servletContext) throws ServletException {
+				ServletRegistration.Dynamic registration = servletContext.addServlet("pet-dispatcher", new DispatcherServlet());
+				registration.setLoadOnStartup(1);
+				registration.addMapping("/");
+				registration.setInitParameter("contextConfigLocation","/WEB-INF/spring/mvc-config.xml");
+			}
+		}
+		
+	
+	-add support for Spring component Scanning & support for conversion, formatting and validation 
+	Define Spring MVC view resolver
+	spring-servlet.xml
+	
+	<beans...>
+		<context:component-scan base-package="com.oscar.springdemo.beans"/>
+		<mvc:annotation-driven/>
+		<mvc:resources mapping="/resources/**" location="/resources/"></mvc:resources>         ${pageContext.request.contextPath}
+		<util:properties id="countryOptions" location="classpath:../countries.properties" />    @Value("#{countryOptions}") 
+		<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+			<property name="prefix" value="/WEB/view/"/>
+			<property name="suffix" value=".jsp"/>
+		</bean>
+	</beans>
+	
+	-Create the controller and the mapping
+		@Controller									--->	This annotation make the class as controller
+		public class HomeController {
+			@RequestMapping("/home")				--->	Mapping the request
+			public String showMyPage() {
+				return "main-menu";					--->	The page where is return  
+				
+			}
+		}
+		
+	-Read html form data
+		@Controller
+		public class HelloWorldController {
+			@RequestMapping("/showForm")
+			public String showForm(){
+				return "helloWorld-form";						--->	Dispatch to helloWorld-form.jsp
+			}
+			
+			@RequestMapping("/processForm")
+			public String processForm() {
+				return "helloworld";							--->	Dispatch to helloworld.jsp
+			}
+		}
+		
+		helloWorld-form.jsp
+			<form action="processForm" method="GET">			--->	submit to processForm mapping.
+				Name:<input type="text" name="studentName"/>	--->	save the value in studentName
+				<input type="submit" />
+			</form>
+			
+		helloworld.jsp
+			<body>
+				Hello World of Spring!
+				<br><br>
+				Student Name:${param.studentName}				--->	value enter in the input the param name is the same
+			</body>												--->	as the same as input name in the form
+		
+	-Adding/Reading Data to the spring Model
+		Model is a container for your application data, you can put anything in the model (String, object, info, etc)
+		the view pages have access to the model.
+		
+		@Controller
+		public class HelloWorldController {
+
+			@RequestMapping("/showForm")
+			public String showForm(){
+				return "helloWorld-form";						--->	Dispatch to helloWorld-form.jsp
+			}
+			
+			@RequestMapping("/processFormV2")
+			public String letsShoutDude(HttpServletRequest request, Model model) {	--->
+				String name = request.getParameter("studentName");	--->	get the parameter name
+				String upper = name.toUpperCase();
+				model.addAttribute("message",upper);			--->	Use the model for store the object  
+				return "helloworldV2";							--->	Dispatch to helloworldV2.jsp
+			}
+		}
+		
+		helloWorld-form.jsp
+			<form action="processFormV2" method="GET">			--->	submit to processFormV2 mapping.
+				Name:<input type="text" name="studentName"/>	--->	save the value in studentName as parameter
+				<input type="submit" />
+			</form>
+			
+		helloworldV2.jsp
+			<body>
+				Hello World of Spring!
+				<br><br>
+				Message:${message}					--->	name of the attribute that was stored in the model
+			</body>											
+		
+	Reading HTML Form Data With @RequestParam Annotation
+		@RequestMapping("processFormV3")
+		public String processFormV3(
+			@RequestParam("studentName") String Tname,	--->	read param from request: studentName, bind the variable to Tname
+			Model model) {
+				String upper = Tname.toUpperCase();
+				model.addAttribute("message",upper);
+				return "helloworld";
+		}
+		
+	-Reading value from url
+		http://localhost:8080/mvc-basic/users/105
+		@Controller
+		@RequestMapping("/users")
+		public class UserController {
+			@RequestMapping(value = "/{userId}", method = RequestMethod.GET)
+			public String show(@PathVariable("userId") Long id, Model model) {		--->		PathVariable to get the variable in the url
+				...
+			}
+
+		}
+		
+	-Spring MVC For Tags
+		It can make use of data binding, Automatically setting / retrieving data from a java object / bean
+		When form is loaded, Spring MVC will call: all get methods in the bean
+		When form is submitted, Spring MVC will call: all set methods in the bean
+		
+		-Create the model	
+			public class Student {
+				private String firstName;
+				private String lastName;
+				private String country;
+				private String language;
+				private String[] os;
+				
+				public String getFirstName() {
+					return firstName;
+				}
+				public void setFirstName(String firstName) {
+					this.firstName = firstName;
+				}
+				// set and get for lastName
+				// set and get for country
+				// set and get for language
+				// set and get for Operating Systems
+			}
+		-Create the controller
+			@Controller	
+			@RequestMapping("/student")
+			public class StudentController{
+				@RequestMapping("/showForm")
+				public String showForm(Model model){
+					Student theStudent = new Student();
+					model.addAttribute("student",theStudent);		--->	Store in the model theStudent object with
+					return "student-form";							--->	student name
+				}
+			
+				@RequestMapping("/processFormV4")
+				public String processFormV4(
+					@ModelAttribute("student")Student theStudent) {	--->	retrieve the student object with the data populates
+						return "helloworld";
+				}
+			}
+		-Create the form
+			student-form.jsp
+					<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+					<form:form form action="processFormV4" modelAttribute="student">	--->	name of the attribute sent before in model
+						<form:input path="firstName" />							--->	Property of the Student class
+						<form:input path="lastName"/>							--->	Property of the Student class
+						<form:select path="country">							--->	Property of the Student class
+							<form:option value="Brazil" label="Brazil"/>		--->	Value to take and what display
+							<form:option value="France" label="France"/>
+						</form:select>	
+						<form:radiobutton path="language" value="Java"/>
+						<form:radiobutton path="language" value="C#"/>
+						<form:checkbox path="os" value="Linux"/>
+						<form:checkbox path="os" value="Mac OS"/>
+						<input type="submit" value="Submit"/>
+					</form:form>
+					
+			-Fill dinamically a select
+				-In the bean
+					private LinkedHashMap<String,String> countryOptions;
+					countryOptions = new LinkedHashMap<String,String>();
+					countryOptions.put("BR","Brazil");
+					countryOptions.put("FR","France");
+					countryOptions.put("GE","Germany");
+				//Create get 
+				-In the form	
+					<form:select path="country">							--->	Property of the Student class
+							<form:options items="{student.countryOptions}/>		---> fill the option with the data collection
+						</form:select>	
+						
+	-From Validation
+		Check the user input form for 
+			required fields
+			valid numbers in a range
+			valid formatting
+			custom business rule
+		
+		-validation rule to the model
+			public class Student {
+				@NotNull(message="is required")
+				@Size(min=1, message="minimun 1 char")
+				private String lastName;
+
+				@Min(value=0,message="must be greater than or equal to zero")
+				@Max(value=10,message="must be less than or equals to ten")
+				private int freePasses;
+				
+				@Pattern(regexp="^[a-zA-Z0-9]{5}",message="only 5 chars/digits")
+				private String zipCode;
+				
+				//All set and get
+			}
+		-Add the from:error tag in the jsp
+			<form:input path="lastName" />
+			<form:errors path="lastName" cssClass="error" />
+			
+		-Add validation rule to controller
+			@RequestMapping("/processFormV4")
+			public String processFormV5(
+			@Valid @ModelAttribute("student")Student theStudent,	--->	@Valid perform validation rules on Student object
+			BindingResult bindingResult) {							--->	Result of validation placed in the BindingResult
+				if(bindingResult.hasErrors()){
+					return "student-form";
+				}else{
+					return "helloworld";
+				}
+			}
+			
+			@InitBinder												--->	Preprocesor request
+			public void initBinder(WebDataBinder dataBinder){
+				StringTrimmerEditor stringTrimmerEditor = new StringTrimmerEditor(true);
+				dataBinder.registerCustomEditor(String.class,stringTrimmerEditor);
+			}
+			
+	-Create a Custom Validation
+		-Create Custom validation rule
+			Create @CourseCode annotation
+				@Constraint(validatedBy = CourseCodeConstraintValidator.class)	--->	Helper class that contains business rule / validation logic
+				@Target({ElementType.METHOD,ElementType.FIELD})					--->	Where can be applied the annotation
+				@Retention(RetentionPolicy.RUNTIME)								--->	how long do I have to retain it.
+				public @interface CourseCode {									--->	Name of the annotation CourseCode 
+
+					public String value() default "LUV";						--->	Define value parameter and a default value
+					public String message() default "must start with LUV";		--->	Define message parameter and a default value
+					
+				}
+		-Add validation rule to Customer class
+			public class CourseCodeConstraintValidator implements 				
+				ConstraintValidator<CourseCode,String>{							--->	Implement ConstraintValidator and add the Annotation Name
+				
+				private String coursePrefix;
+	
+				@Override
+				public void initialize(CourseCode courseCode) {
+					coursePrefix = courseCode.value();
+				}
+	
+				@Override
+				public boolean isValid(String code, 
+					ConstraintValidatorContext constraintValidatorContext) {	--->	
+					boolean result;
+					if(code != null) {
+						result = code.startsWith(coursePrefix);
+					}else {
+						result = true;
+					}
+					return result;
+				}
+				
+			
+			}
+		
+
+Spring Hibernate
+	Configurate xml file
+		<hibernate-configuration>
+			<session-factory>
+				<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+				<property name="connection.url">jdbc:mysql://localhost:3306/hb_student_tracker?useSSL=false</property>
+				<property name="connection.username">hbstudent</property>
+				<property name="connection.password">hbstudent</property>
+				
+				<property name="connection.pool_size">1</property>
+				
+				<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+				
+				<property name="show_sql">true</property>
+				
+				<property name="current_session_context_class"></property>
+			</session-factory>
+		</hibernate-configuration>
+	
+	Annotate Java Class
+		@Entity
+		@Table(name="student")
+		public class Student{
+			@Id
+			@GeneratedValue(strategy=GenerationType.IDENTITY)		--->	let to database handle the generation AUTO_INCREMENT
+			@Column(name="id")
+			int id;
+			@Column(name="first_name")
+			String firstName;
+			@Column(name="last_name")
+			String lastName;
+			@Column(name="email")
+			String email;
+			
+			//Create setter and getter and constructor
+		}
+		
+	Develop Java Code to perform database operations
+		SessionFactory
+			Reads the hibernate config file
+			Creates Session objects
+			Heavy-weight object
+			Only create once in your application
+		
+		Session	
+			Wraps a JDBC connection
+			Main object used to save/retrieve objects
+			Short-lived object
+			Retrieved from SessionFactory
+			
+		Configure session-factory
+			SessionFactory factory = new Configuration()				--->	Create new configuration for session-factory
+									.configure("hibernate.cfg.xml")		--->	Add the configuration file
+									.addAnnotatedClass(Student.class)	--->	Add the entity class
+									.buildSessionFactory();				--->	build the session factory
+									
+			Session session = factory.getCurrentSession();				--->	Create the session
+			
+			try{
+				session.beginTransaction();								--->	Start a transaction
+				session.save(obj);										--->	Save the object
+				session.getTransaction().commit();						--->	Commit the transaction
+			}finally{
+				factory.close();
+			}
+	Create objects
+			try{
+				session.beginTransaction();								--->	Start a transaction
+				session.save(obj);										--->	Save the object
+				session.getTransaction().commit();						--->	Commit the transaction
+			}finally{
+				factory.close();
+			}
+	
+	Read objects
+		try{
+				session.beginTransaction();											--->	Start a transaction
+				Student student = session.get(Student.class,theStudent.getId());	--->	Recover the row by id number
+				session.getTransaction().commit();						--->	Commit the transaction
+			}finally{
+				factory.close();
+			}
+	
+	Query Object
+		try{
+			session.beginTransaction();
+			
+			List<Student> listStu = 
+			session.createQuery("from Student").getResultList();	--->	Use the object name not the bdd name
+			listStu = 
+			session.createQuery("from Student s where s.lastName='Hernandez'").getResultList();	---> use the property java not db
+			session.createQuery("from Student s where s.lastName='Hernandez' OR s.firstName='Daffy'").getResultList();	
+			session.createQuery("from Student s where s.email LIKE '%oscar%'").getResultList();	
+			session.getTransaction.commit();
+		}finally{
+			factory.close();
+		}
+	
+	Update Object
+		Session session = factory.getCurrentSession();								--->	Create the session
+		try{
+				session.beginTransaction();											--->	Start a transaction
+				Student student = session.get(Student.class,theStudent.getId());	--->	Recover the row by id number
+				student.setEmail("newEmail@gmail.com")								--->	Update fields
+				session.getTransaction().commit();									--->	Commit the transaction
+		}finally{
+			factory.close();
+		}
+	
+	Delete Object
+		Session session = factory.getCurrentSession();								--->	Create the session
+		try{
+				session.beginTransaction();											--->	Start a transaction
+				Student student = session.get(Student.class,theStudent.getId());	--->	Recover the row by id number
+				session.delete(student);											--->	Give the object to delete
+				session.getTransaction().commit();									--->	Commit the transaction
+		}finally{
+			factory.close();
+		}
+		
+	ID Generation Strategies
+		GenerationType.Auto			--->	Pick an appropriate strategy for the particular database
+		GenerationType.IDENTITY		--->	Assign primary keys using database identity column
+		GenerationType.SEQUENCE		--->	Assign primary keys using a database sequience
+		GenerationType.TABLE		--->	Assign primary keys using an underlying database table to ensure uniqueness
+
+	Hibernate @OneToOne 
+		@Entity
+		@Table(name="instructor_detail")
+		public class InstructorDetail {
+
+			@Id
+			@GeneratedValue(strategy=GenerationType.IDENTITY)
+			@Column(name="id")
+			private String id;
+			@Column(name="youtube_channle")
+			private String youtubeChannel;
+			@Column(name="hobbie")
+			private String hobbie;
+			
+		}
+		
+		@Entity
+		@Table(name="instructor")
+		public class Instructor {
+
+			@Id
+			@GeneratedValue(strategy=GenerationType.IDENTITY)
+			@Column(name="id")
+			private int id;
+			@Column(name="first_name")
+			private String firstName;
+			@Column(name="last_name")
+			private String lastName;
+			@Column(name="email")
+			private String email;
+			@OneToOne(cascade=CascadeType.ALL)						--->	Define relationship 
+			@JoinColumn(name="instructor_detail_id")				--->	Name of the foreign key in the database
+			private InstructorDetail instructorDetail;				--->	
+		}
+		
+	Hibernate @OneToOne Bi-Directional
+		If we load an InstructorDetail
+			then we would like to get the associated Instructor, but is not possible with uni-directional relationship 
+			In this case for making possible we can use Bi-Directional.
+		
+			@Entity
+			@Table(name="instructor_detail")
+			public class InstructorDetail {
+
+				@Id
+				@GeneratedValue(strategy=GenerationType.IDENTITY)
+				@Column(name="id")
+				private String id;
+				@Column(name="youtube_channle")
+				private String youtubeChannel;
+				@Column(name="hobbie")
+				private String hobbie;
+				@OneToOne(mappedBy="instructorDetail",cascade=CascadeType.ALL)	--->	add @OneToOne annotation for the relationship 
+				private Instructor instructor;						--->	Add new field to reference Instructor in InstructorDetail
+				//add getter / setter methods for Instructor
+			}
+			*Note 
+				mappedBy="instructorDetail" (refer to "instructorDetail" proeprty in "Instructor" class)
+				mappedBy tell Hibernate	
+					Look at the instructorDetail property in the Instructor class
+					Use information from the Instructor class @JoinColumn
+					To help fin associated instructor
+			
+		
+		Delete only the detail Object
+			In the Entity class change this configuration
+				@Entity
+				@Table(name="instructor_detail")
+				public class InstructorDetail {
+						...
+					@OneToOne(mappedBy="instructorDetail",
+					{cascade=CascadeType.DETACH,cascade=CascadeType.MERGE,
+					cascade=CascadeType.PERSIST,cascade=CascadeType.REFRESH})	--->	Change from ALL to the rest of type except REMOVE
+					private Instructor instructor;						--->	Add new field to reference Instructor in InstructorDetail
+					//add getter / setter methods for Instructor
+				}
+			
+			In the app 
+				Session session = factory.getCurrentSession();
+				try {
+					
+					session.beginTransaction();
+					
+					InstructorDetail instructorDetail = session.get(InstructorDetail.class, 1);		--->	get the instructorDetail to delete
+					instructorDetail.getInstructor().setinstructorDetail(null);						--->	remove the associated object reference break bi-directional link
+					
+					session.getTransaction().commit();
+					
+				}catch(Exception e){
+					e.printStackTrace();
+				}finally {
+					session.close();
+				}
+		
+	Hibernate @OneToMany Bi-Directional
+		Create entity
+		
+		@Entity
+		@Table(name="course")
+		public class Course {
+
+			@Id
+			@GeneratedValue(strategy=GenerationType.IDENTITY)
+			@Column(name="id")
+			private int id;
+			
+			@Column(name="title")
+			private String title;
+			
+			@ManyToOne(cascade={CascadeType.PERSIST,CascadeType.MERGE,
+					CascadeType.DETACH,CascadeType.REFRESH})
+			@JoinColumn(name="instructor_id")									--->	instructor_id is the foreign key that refer to instructor	
+			private Instructor instructor;										--->
+			//getter and setter and constructor
+		}
+		
+		@Entity
+		@Table(name="instructor")
+		public class Instructor {
+
+			@Id
+			@GeneratedValue(strategy=GenerationType.IDENTITY)
+			@Column(name="id")
+			private int id;
+			@Column(name="first_name")
+			private String firstName;
+			@Column(name="last_name")
+			private String lastName;
+			@Column(name="email")
+			private String email;
+			@OneToOne(cascade=CascadeType.ALL)
+			@JoinColumn(name="instructor_detail_id")
+			private InstructorDetail instructorDetail;
+			
+			@OneToMany(mappedBy="instructor",cascade={CascadeType.PERSIST,CascadeType.MERGE,//--->	Refers to "instructor" property in "Course" class
+													CascadeType.DETACH,CascadeType.REFRESH})
+			private List<Course> courses;
+			
+			//Add convenience methods for bi-directional relationship
+			public void add(Course course) {
+				if(courses==null) {
+					courses = new ArrayList<Course>();
+				}
+				courses.add(course);
+				course.setInstructor(this);
+			}
+	
+		Create Object
+			Session session = factory.getCurrentSession();
+			try {
+				
+				session.beginTransaction();
+				
+				Instructor instructor = session.get(Instructor.class, 1);		--->	get the Instructor where we are going to save the course
+				Course course1 = new Course("Master in Web Services");			--->	Create the courses
+				Course course2 = new Course("Master in web Components");
+				
+				instructor.add(course1);										--->	Save the course in  instructor it will updated in the database automatically
+				instructor.add(course2);										--->	Save the course in  instructor it will updated in the database automatically
+				
+				session.save(course1);											--->	Save the Course in the Database
+				session.save(course2);											--->	Save the Course in the Database
+				session.getTransaction().commit();
+			}finally {
+				session.close();
+				factory.close();
+			}
+	
+		Delete Object
+			Session session = factory.getCurrentSession();
+			try {
+				session.beginTransaction();
+				Course course = session.get(Course.class, 11);
+				session.delete(course);
+				session.getTransaction().commit();
+			}finally {
+				session.close();
+				factory.close();
+			}
+	
+	Fetch Types: Eager vs Lazy
+		Eager will retrieve everything (will load all dependent entities)
+		Lazy will retrieve on request (will load the main entity first and then load the dependent entitites on demand)
+		
+		When you define the mapping relationship, you can specify the fetch type: EAGER or LAZY
+			fecth=FetchType.EAGER
+			fetch=FetchType.LAZY
+		Default Fetch Types
+			@OneToOne		FetchType.EAGER
+			@OneToMany		FetchType.LAZY
+			@ManyToOne		FetchType.EAGER
+			@ManyToMany		FetchType.LAZY
+			
+		To retrieve lazy data, you will need to open a Hibernate session	
+			opt 1: session.get and call appropiate getter methods
+			opt 2: Hibernate query with HQL
+	
+	Hibernate @OneToMany Uni-Directional
+	
+	Hibernate @ManyToMany
+		In entity table
+		
+		Course Entity
+		
+			@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,
+				CascadeType.DETACH,CascadeType.REFRESH})
+			@JoinTable(name="course_student",								--->	Table name
+					joinColumns=@JoinColumn(name="course_id"),				--->	field name
+					inverseJoinColumns=@JoinColumn(name="student_id"))		--->	field name
+			List<Student> students;
+	
+		Student	Entity
+			@ManyToMany(cascade={CascadeType.PERSIST,CascadeType.MERGE,
+			CascadeType.DETACH,CascadeType.REFRESH})
+			@JoinTable(name="course_student",								--->	Table name
+					joinColumns=@JoinColumn(name="student_id"),				--->	field name
+					inverseJoinColumns=@JoinColumn(name="course_id"))		--->	field name
+			List<Course> courses;
+			
+		Create Course And Student
+			Session session = factory.getCurrentSession();
+			try {
+				
+				session.beginTransaction();
+				
+				Course course = new Course("Java Web Services");
+				session.save(course);
+				
+				Student stu1 = new Student("Oscar", "Hernandez", "oscar.hdez.s@gmail.com");
+				Student stu2 = new Student("Margarita", "Castañeda", "marcasal@gmail.com");
+				
+				course.add(stu1);
+				course.add(stu2);
+				
+				session.save(stu1);
+				session.save(stu2);
+				
+				session.getTransaction().commit();
+			}finally {
+				session.close();
+				factory.close();
+			}
+			
+		Add Course for Student
+			Session session = factory.getCurrentSession();
+			try {
+				
+				session.beginTransaction();
+				
+				Student student = session.get(Student.class,1);
+				
+				Course course1 = new Course("Spring Core");
+				Course course2 = new Course("Spring MVC");
+				
+				course1.add(student);
+				course2.add(student);
+				
+				session.save(course1);
+				session.save(course2);
+				
+				session.getTransaction().commit();
+			}finally {
+				session.close();
+				factory.close();
+			}
+	
+	
+	
+	Cascade Strategies
+		CascadeType.ALL
+		CascadeType.DETACH
+		CascadeType.MERGE
+		CascadeType.PERSIST
+		CascadeType.REFRESH
+		CascadeType.REMOVE
+		
+Sprin provides @Transactional 
+	Automatically begin and end a transaction for your Hibernate code; no need beginTransaction or commit
+		no need anymore for:
+			session.beginTransaction()
+			session.getTransaction().commit();
+		only need put @Transactional in the top of the method
+			@Transactional
+			public List<Customer> getCustomers(){
+			
+			}
+			
+Spring @Repository
+	Applied to DAO Implementation.
+	Spring will automatically register the DAO implemtation (thanks to compenent-scanning)
+	Spring also provides translation of any JDBC related exceptions.
+	
+Spring @Service	
+	Applied to Service Implementations
+	Spring will automatically register the Service implementation (thanks to compenent-scanning)
+	
+	
+Spring @GetMapping @PostMapping
+	@RequestMapping(path="/list",method=RequestMethod.GET)		--->		@GetMapping("/list")
+	public String listCustomer(Model model) {								public String listCustomer(Model model) {
+				...																			...
+	}																		}
+
+	@RequestMapping(path="/list",method=RequestMethod.POST)		--->		@PostMapping("/list")
+	public String listCustomer(Model model) {								public String listCustomer(Model model) {
+				...																			...
+	}	
+	
+	
+AOP: Aspect-Oriented Programming  
+	Spring AOP only supports
+		Method-level join points
+		Run-time code weaving(slower that AspectJ)
+
+	AOP Terminology
+		Aspect: module of code for a cross-cutting concern(logging, security)
+		Advice: What action is taken and when it should be applied
+		Join Point: When to apply code during program execution
+		Pointcut: A predicate expression for where advice should be applied
+		
+	Advices Types
+		Before advice: run before the method
+		After finally advice: run after the method (finally)
+		After returning advice: run after the method (success execution)
+		After throwing advice: run after method (if exception thrown)
+		Around advice: run before and after method
+		
+	Weaving 
+		Connection aspects to target objects to create an advised object
+		
+	AOP Pointcut expressions
+		Pointcut: A predicate expression for where advice should be applied
+			execution method
+				execution(modifiers-pattern? return-type-pattern declaring-type-pattern? 				  method-name-pattern(param-pattern) throws-pattern?)
+				execution(pulic				 void				 com.oscar.springdemo.aspects.DemoAspect. beforeAddAccountAdvice())
+				note: The pattern is optional if it has "?"
+				you can use wildcards
+					* (matches on everything)
+						execution(public void add*())			--->	Matches methods starting with add in any class
+			
+			Parameter pattern Wildcards
+				For param-pattern
+					()		--->	matches a method with no arguments
+					(*)		--->	matches a method with one argument of any type
+					(..)	--->	matches a method with 0 or more arguments of any type
+				
+	Spring AOP @Before
+		Before advice: run before the method
+		
+		
+		@EnableAspectJAutoProxy									--->	in configuration file.
+		<aop:aspectj-autoproxy/>								--->	in xml file
+	
+		Class where the Aspect will be aplied
+			@Component
+			public class AccountDAO {
+
+				public void addAccount() {						--->	Give the name on the aspect execution
+					System.out.println(getClass()+": Doing my db work: adding an account");
+				}
+				
+			}
+	
+		Simple advice
+		Create Advice Class
+			@Component											--->	Must Be a Component
+			@Aspect												--->	Say it is an Aspect class
+			public class MyDemoLoggingAspect {
+
+				@Before("execution(public void addAccount())")	--->	Declare @Before advise, match all methods that be public void AddAccount()
+				public void beforeAddAccountAdvice() {
+					System.out.println("\n====>>> Executing @Before advice on addAccount()");
+				}
+				
+			}
+		Match a Specific method 
+			@Before("execution(public void com.oscar.springdemo.dao.MembershipDAO.addAccount())")	--->	Declare @Before advise, 
+																									--->	specific method in a class, we added package
+				
+		Match a method starting with "add" in any class
+			@Before("execution(public void add*())")												--->	Declare @Before advise, 
+																									--->	match all method start with "add"
+																									
+		Match a method with given "return type"
+			@Before("execution(public * addAccount())")												--->	Declare @Before advise, 
+																									--->	match all addAccount method with any return type
+																									
+		Match a method with no arguments
+			@Before("execution(public void addAccount())")											--->	Declare @Before advise, 
+																									--->	match all addAccount method with no arguments 
+																									
+		Match a method with "Account" param
+			@Before("execution(public void addAccount(com.oscar.springdemo.entity.Account))")		--->	Declare @Before advise, 
+																									--->	match all AddAccount method with Account parameter
+																									
+		Match a method with "Account" followed with any param
+			@Before("execution(public void addAccount(com.oscar.springdemo.entity.Account,..))")	--->	Declare @Before advise, 
+																									--->	match all AddAccount method with Account folled with any parameter																									
+																									
+		Match a method with any number of param	(0..N)
+			@Before("execution(public void addAccount(..))")										--->	Declare @Before advise, 
+																									--->	match all AddAccount method with any parameter		
+		
+		Match all methods in all classes with any number of param	in specific pack
+			@Before("execution(public void com.oscar.springdemo.dao.*.*(..))")						--->	Declare @Before advise, 
+																									--->	match all methods in all classes with any number of param	in specific pack
+
+	AOP Pointcut Declaration
+		You can create a pointcut declaration once and Apply it to multiple advices.
+		
+		@Component
+		@Aspect
+		public class MyDemoLoggingAspect {
+
+			@Pointcut("execution(* com.oscar.springdemo.dao.*.*(..))")								---> Declare Pointcut with the expression
+			private void forDaoPackage() {}
+			
+			@Before("forDaoPackage()")																---> Use the pointcut in the method
+			public void beforeAddAccountAdvice() {
+				System.out.println("\n====>>> Executing @Before advice on addAccount()");
+			}
+			
+			@Before("forDaoPackage()")																---> Re-use pointcut expression
+			public void performApiAnalytics() {
+				System.out.println("\n====>>> Perform API analytics");
+			}
+		}
+	
+	Combine Pointcut expression
+		Create Pointcut for all methods in a package Except getter/setter methods
+		
+		@Component
+		@Aspect
+		public class MyDemoLoggingAspect {
+
+			@Pointcut("execution(* com.oscar.springdemo.dao.*.*(..))")							--->	all methods in all classes with any parameter specific package
+			private void forDaoPackage() {}
+			
+			@Pointcut("execution(* com.oscar.springdemo.dao.*.get*(..))")						---> all start with get
+			private void getter() {}
+			
+			@Pointcut("execution(* com.oscar.springdemo.dao.*.set*(..))")						--->	all start with set
+			private void setter() {}
+			
+			@Pointcut("forDaoPackage() && !(getter() || setter())")								--->	Combine Pointcut with forDaoPackage except getter()setter()
+			private void DaoNoSetNoGet() {
+				
+			}
+			
+			@Before("DaoNoSetNoGet()")
+			public void beforeAddAccountAdvice() {
+				System.out.println("\n====>>> Executing @Before advice on addAccount()");
+			}
+			
+			@Before("DaoNoSetNoGet()")
+			public void performApiAnalytics() {
+				System.out.println("\n====>>> Perform API analytics");
+			}
+			
+		}
+		
+	Ordering Aspects
+		Control the order with @Order(1)
+			Guarantees order of when Aspects are applied
+			Lower numbers have higher precendence
+			Does not have to be consecutive
+			Negative number are allowed
+			If two aspects have the same num order annotation, The order is undefined
+			
+			@Aspect
+			public class GenericAopExpressions {
+
+				@Pointcut("execution(* com.oscar.springdemo.dao.*.*(..))")
+				public void forDaoPackage() {}										--->	Must be pulic
+				
+				@Pointcut("execution(* com.oscar.springdemo.dao.*.get*(..))")
+				public void getter() {}												--->	Must be pulic
+				
+				@Pointcut("execution(* com.oscar.springdemo.dao.*.set*(..))")
+				public void setter() {}												--->	Must be pulic
+				
+				@Pointcut("forDaoPackage() && !(getter() || setter())")
+				public void DaoNoSetNoGet() {										--->	Must be pulic
+					
+				}
+				
+			}
+			
+			@Aspect
+			@Component	
+			@Order(1)													--->	Define the order
+			public class MyCloudLogAsyncAspect {
+
+				@Before("com.oscar.springdemo.aspects.GenericAopExpressions.DaoNoSetNoGet()")	--->	Must be with full qualify name
+				public void logToCloudAsync() {
+					System.out.println("\n====>>> Logging to Cloud in async fashion");
+				}
+				
+			}
+			
+			@Component
+			@Aspect
+			@Order(2)													--->	Define the order
+			public class MyDemoLoggingAspect {
+
+				@Before("com.oscar.springdemo.aspects.GenericAopExpressions.DaoNoSetNoGet()")
+				public void beforeAddAccountAdvice() {
+					System.out.println("\n====>>> Executing @Before advice on addAccount()");
+				}
+				
+			}
+			
+			@Component
+			@Aspect
+			@Order(3)													--->	Define the order
+			public class MyApiAnalyticsAspect {
+
+				@Before("com.oscar.springdemo.aspects.GenericAopExpressions.DaoNoSetNoGet()")
+				public void performApiAnalytics() {
+					System.out.println("\n====>>> Perform API analytics");
+				}
+				
+			}
+	
+	JoinPoints
+		Help us to:
+			Access and display Method Signature
+			Access and display Method Arguments
+			
+			@Component
+			@Aspect
+			public class MyApiAnalyticsAspect {
+
+				@Before("com.oscar.springdemo.aspects.GenericAopExpressions.DaoNoSetNoGet()")
+				public void performApiAnalytics(JoinPoint joinpoint) {								--->	Use JoinPoint to access method signature and parameter
+					
+					MethodSignature methodSignature = (MethodSignature)joinpoint.getSignature();	--->	Get the method signature
+					System.out.println("Method signature:"+methodSignature);
+					
+					Object[] objects = joinpoint.getArgs();											--->	Get the methods arguments.
+					for(Object o:objects) {
+						System.out.println("Object:"+o);
+					}
+				}
+				
+			}
+			
+	@AfterReturning
+		After returning advice: run after the method (success execution)
+			Post process the data before returning to caller
+			Format the data or enrich the data 
+			
+		@Component
+		@Aspect
+		public class MyDemoLoggingAspect {
+
+			@AfterReturning(pointcut="execution(* com.oscar.springdemo.dao.AccountDAO.findAccounts(..))",		--->	Define the poincut expression
+					returning="listAccount")																	--->	Define the object name to returning 
+			public void afterReturningFindAccountsAdvice(JoinPoint joinPoint, List<Account> listAccount) {		--->	Define the joinPoint and te returning name-pattern			
+																												--->	must be the same as in "returning" value
+				System.out.println("\\n====>>> Executing @AfterReturning advice on "+joinPoint.getSignature());
+				System.out.println(listAccount);
+				
+			}
+		}
+		
+	@AfterThrowing
+		After throwing advice: run after method (if exception thrown)
+			Log the exception
+			Perform auditing on the exception
+			Encapsulate this functionality in AOP aspect for easy reuse
+		The exception is propagate, if you want to stop the exception propagation:
+			then use the @Around advice
+		
+		@Component
+		@Aspect
+		public class MyDemoLoggingAspect {
+
+			@AfterThrowing(pointcut="execution(* com.oscar.springdemo.dao.AccountDAO.findAccounts(..))",
+					throwing="exception")																		--->	Define the object name to returning 
+			public void afterThrowingFindAccountsAdvice(JoinPoint joinPoint, Exception exception) {				--->	must be the same as in "throwing" value
+				
+				System.out.println("\\\\n====>>> Executing @AfterReturning advice on "+joinPoint.getSignature());
+				System.out.println("Exceptionaaaaa:"+exception);
+			}
+			
+		}
+		
+	@After
+		After finally advice: run after the method (finally)
+			It always run, on success or exception
+			it does not have access to the exception
+			
+		@Component
+		@Aspect
+		public class MyDemoLoggingAspect {
+
+			@After("execution(* com.oscar.springdemo.dao.AccountDAO.findAccounts(..))")
+			public void afterFinallyFindAccountsAdvice(JoinPoint joinPoint) {
+				System.out.println("\\\\n====>>> Executing @After (finally) on method "+joinPoint.getSignature());
+			}
+		}
+		
+	@Around
+		Around advice: run before and after method
+			Pre-processing and post-processing data
+			Instrumentation / profiling code	
+				How long does it take for a section fo code to run?
+			Magaging exceptions		
+				Swallow / handle / stop exceptions
+				rethrow the exception
+				
+		@Component
+		@Aspect
+		public class MyDemoLoggingAspect {
+			@Around("execution(* com.oscar.springdemo.service.*.getFortune(..))")												--->	Defining pointcutExpression
+			public Object aroundGetFortune(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {							--->	ProccedingJoinPoint as parameter
+				myLogger.info("\n====>> Executing @Around on method:"+proceedingJoinPoint.getSignature().toShortString());
+				long begin = System.currentTimeMillis();
+				Object result = proceedingJoinPoint.proceed();																	--->	go to execute the 
+				long end = System.currentTimeMillis();
+				long duration = end - begin;
+				myLogger.info("\n ===>> Duration:"+duration/1000.0+" Seconds");
+				return result;
+			}
+			
+		}
+		
+		Handle Exception
+		
+		@Component
+		@Aspect
+		@Order(2)
+		public class MyDemoLoggingAspect {
+			private static Logger myLogger = Logger.getLogger(MyDemoLoggingAspect.class.getName());
+			@Around("execution(* com.oscar.springdemo.service.*.getFortune(..))")
+			public Object aroundGetFortune(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+				myLogger.info("\n====>> Executing @Around on method:"+proceedingJoinPoint.getSignature().toShortString());
+				long begin = System.currentTimeMillis();
+				Object result = null;
+				try {
+					result=proceedingJoinPoint.proceed();
+				}catch(Exception e){
+					result="Major accident! but no worries, your private AOP helicopter is on the way!";			//Handle the exception
+					myLogger.warning("Major accident! Highway is closed!del resultado");
+				}
+				long end = System.currentTimeMillis();
+				long duration = end - begin;
+				myLogger.info("\n ===>> Duration:"+duration/1000.0+" Seconds");
+				return result;
+			}
+			
+		}
+		
+		Rethrow exception
+		
+		
+Spring Security
+	To configure Spring security, the developer must take care of three things:
+		• declare the security filter for the application
+		• define the Spring Security context
+		• configure authentication and authorization
+
+	Web Configuration withot XML
+		Configure Beans
+	
+		@Configuration													--->	it is a configuration file
+		@EnableWebMvc													--->	same as <mvc:annotation-drive/>
+		@ComponentScan(basePackages="com.oscar.spring")					--->	<context:component-scan base-package="com.oscar.spring"/>
+		public class DemoAppConfig extends WebMvcConfigurerAdapter{
+			
+			@Bean
+			public ViewResolver viewResolver(){					--->	Defining the InternalResourceViewResolver
+				InternalResourceViewResolver internalResourceViewResolver = new InternalResourceViewResolver();
+				internalResourceViewResolver.setPrefix("/WEB-INF/view/");
+				internalResourceViewResolver.setsuffix(".jsp");
+				return internalResourceViewResolver;
+			}
+		}
+		
+	
+		Configure the web.xml
+		
+		public MySpringMvcDispatcherServletInitializer extends
+			AbstractAnnotationConfigDispatcherServletInilizer{	--->	Extends this class for enable the servlet configuration
+		
+			protected Class<?>[] getRootConfigClasses(){		--->	Implements this method
+				
+			}
+			
+			protected Class<?>[] getServletConfigClasses(){		--->	Implements this method
+				return new Class[]{DemoAppConfig.class};		--->	Servlet config class that we created before, that contain the configuration
+			}
+			
+			protected String[] getServletMappings(){			--->	Implements this method
+				return new String[]{"/"};						--->	Servlet mapping
+			}
+		}
+		
+	Configure Basic Security
+		Create Spring Security Initializer
+			public class SecurityWebApplicationInitializer extends 
+				AbstractSecurityWebApplicationInitializer{		--->	Special class to register the Spring Security Filters
+
+			}
+		
+	Create Spring Security Configuration (@Configuration) &	Add users, passwords and roles
+		@Configuration
+		@EnableWebSecurity
+		public class DemoSecurityConfig extends WebSecurityConfigurerAdapter{
+			@Override
+			protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+				UserBuilder users = User.withDefaultPasswordEncoder();
+				auth.inMemoryAuthentication()
+					.withUser(users.username("Oscar").password("test123").roles("EMPLOYEE"))
+					.withUser(users.username("Margarita").password("test123").roles("EMPLOYEE","MANAGER"))
+					.withUser(users.username("Su").password("test123").roles("EMPLOYEE","ADMIN"));
+			}
+
+	Custom Login Form add the follow method
+	
+			protected void configure(HttpSecurity httpSecurity) throws Exception {
+				httpSecurity.authorizeRequests()				--->	Restrict access based on the HttpServletRequest
+					.anyRequest().authenticated()				--->	Any request to the app must be authenticated
+					.and()
+					.formLogin()								--->	We are customizing the form login process
+					.loginPage("/showMyLoginPage")				--->	Show the custom form at the request mapping
+					.loginProcessingUrl("/authenticateTheUser") --->	Login form should POST data to this URO for processing
+					.permitAll()								--->	Allow all access here
+					.and()
+					.logout().permitAll();						--->	Add logout support for default URL /logout
+			}
+		}
+		
+		in controller
+			@Controller
+			public class LoginController {
+				@GetMapping("/showMyLoginPage")					--->	The same as loginPage
+				public String showMyLoginPage() {
+					return "plain-login";
+				}
+			}
+		
+		in Jsp plain-login.jsp
+			<form:form action="${pageContext.request.contextPath}/authenticateTheUser" method="POST">		--->	must be the same as loginProcessingUrl
+				<c:if test="${param.error!=null}">					--->	When you enter invalid username & password, spring append "?error" parameter and redirect to login page
+					<i>Sorry! You entered invalid username/password</i>		in the url
+				</c:if>
+				<c:if test="${param.logout!=null}">					--->	When logout is submit spring redirecto to login page and add "?logout" parameter to url
+					<i>Sorry! You have been logged out.</i>		
+				</c:if>
+				User name:<input type="text" name="username"/>		--->	name must be username
+				Password:<input type="password" name="password"/>	--->	name must be password
+				<input type="submit" value="Login"/>
+			</form:form>
+		
+		
+						METHOD											DESCRIPTION
+			configure(AuthenticationManagerBuilder)				Configure users (in memory, database, ldap, etc)
+			configure(HttpSecurity)								Configure security of web paths in application, login, logout etc
+			
+			
+			/logout URL will be handled by Spring Security Filters (no coding required), when it is hit, it invalidate user's HTTP session
+			and remove session cookies. 
+			Send user back to your login page
+			Append a logout parameter: ?logout
+	
+	
+	Display User ID and Roles
+		<%@ taglib prefix="security" uri="http://www.springframework.org/security/tags" %>
+			user:<security:authentication property="principal.username"/>
+			Roles:<security:authentication property="principal.authorities"/>
+	
+	Display Content based on Roles
+		<security:authorize access="hasRole('MANAGER')">
+			content to display
+		</security:authorize>
+			
+	Restrict access Based on Roles
+		protected void configure(HttpSecurity httpSecurity) throws Exception {
+				httpSecurity.authorizeRequests()					--->	Restrict access based on the HttpServletRequest
+					.anyRequest().authenticated()					--->	Any request to the app must be authenticated
+					.antMatchers("/").hasRole("EMPLOYEE")			--->	To "/" have access all that have "EMPLOYEE" role
+					.antMatchers("/leaders/**").hasRole("MANAGER")	--->	To "/leaders" have access all that have "MANAGER" role
+					.antMatchers("/systems/**").hasRole("ADMIN")	--->	To "/systems" have access all that have "ADMIN" role
+					.and()
+					.formLogin()									--->	We are customizing the form login process
+					.loginPage("/showMyLoginPage")					--->	Show the custom form at the request mapping
+					.loginProcessingUrl("/authenticateTheUser") 	--->	Login form should POST data to this URO for processing
+					.permitAll()									--->	Allow all access here
+					.and()
+					.logout().permitAll()							--->	Add logout support for default URL /logout
+					.and()
+					.exceptionHandling().accessDeniedPage("/access-denied");	--->	When an user trying to access to a resource that have different role
+			}																	--->	we redirect to this url.
+			
+	Spring Security JDBC
+		By default, you have to follow Spring Security's predefined table schemas.
+			
+							users						authorities					---> authorities is role
+					username varchar(50)			username varchar(50)
+					password varchar(50)			authority varchar(50)			---> must inter with "ROLE_" prefix in this records
+					enabled tinyint(1)
+	
+		Configure the JDBC Connection and load data from property file
+			@PropertySource("classpath:persistence-mysql.properties")
+			public class DemoAppConfig {
+		
+				@Autowired
+				private Environment env;											--->		will hold data read from properties files
+			
+				@Bean																--->		Define Bean for latter use it
+				public DataSource securityDataSource() {
+					
+					ComboPooledDataSource securityDataSource = new ComboPooledDataSource();
+					
+					try {
+						securityDataSource.setDriverClass(env.getProperty("jdbc.driver"));
+					} catch (PropertyVetoException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					securityDataSource.setJdbcUrl(env.getProperty("jdbc.url"));
+					securityDataSource.setUser(env.getProperty("jdbc.username"));
+					securityDataSource.setPassword(env.getProperty("jdbc.password"));
+					
+					securityDataSource.setInitialPoolSize(0);
+					securityDataSource.setMinPoolSize(0);
+					securityDataSource.setMaxPoolSize(0);
+					securityDataSource.setMaxIdleTime(0);
+					
+					
+					return securityDataSource;
+			}	}
+	
+		Use the dabase for authentication
+			@Configuration
+			@EnableWebSecurity
+			public class DemoSecurityConfig extends WebSecurityConfigurerAdapter{
+				
+				@Autowired
+				DataSource securityDataSource;									--->		Bean that was defined previously
+				@Override
+				protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+					auth.jdbcAuthentication().dataSource(securityDataSource);
+				}
+			}
+
+			
+Spring Rest
+
+	Using the @RequestMapping annotation, HTTP REST requests can be mapped to controllers.
+	Although annotated with the stereotype annotation @Controller, their methods do not return results that can be mapped to a view, but to a representation.
+	The DispatcherServlet is notified that the result of the execution of a controller does not have to be mapped to a view by annotating the method with @ResponseBody.
+	When you use @Controller for Spring rest you must specify the @ResponseBody in the method.
+
+	@ResponseStatus(HttpStatus.CREATED) for specifying the status code 
+
+	HTTP METHODS				@RequestMapping									Spring 4.3 Annotation
+	GET 			@RequestMapping(method=RequestMethod.DELETE) 					@GetMapping
+	POST 			@RequestMapping(method=RequestMethod.POST) 						@PostMapping
+	DELETE 			@RequestMapping(method=RequestMethod.DELETE) 					@DeleteMapping
+	PUT 			@RequestMapping(method=RequestMethod.PUT) 						@PutMapping
+
+	JSON ---> Java Script Object Notation
+		Lightweight data format for storing and exchangin data ... plain text, language independent
+		-Curley braces define ojbects in JSON
+		-Object members are name/ value pairs; delimited by colons
+		-The name is double quote
+		
+		{
+			"id":18,
+			"firstName":"Oscar",
+			"lastName":"Hernandez",
+			"active":true,
+			"courses":null
+			"address":	{
+							"street":"Vista de la montaña",
+							"number":21,
+							"currentLocation":true
+						{
+			"languages":["Java","C#","Python","Javascript"]
+		}
+		
+	Data Binding --->	Process of converting JSON data to a Java POJO
+	Jackson --->	Support of databinding, it support XML and JSON
+	
+	JSON to Java pojo, Jackson call setXXX methods, Jackson does not access internal private fields directly
+		ObjectMapper mapper = new ObjectMapper();
+		Student student = mapper.readValue(new File("data/student.json"),Student.class);
+		
+	Java pojo to JSON, 	Jackson call getXXX methods on POJO
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.enable(SerializationFeature.INDENT_OUPUT);
+		mapper.writeValue(new File("data/output.json"),student);
+	
+	When building Spring REST applications
+		Spring will automatically handle Jackson Integration
+		JSON data being passed to REST controller is converted to POJO
+		Java object being returned from REST controller is converted to JSON
+	
+	HTTP Response - Status Codes
+			Code Range				Description
+			100 - 199				Informational
+			200 - 299				Successful
+			300 - 399				Redirection
+			400 - 499				Client error
+			500 - 599				Server error
+			
+	MIME Content Types
+		The message format is described by MIME content type
+			Basic Syntax: 	type/sub-type
+							text/html, text/plain, application/json, application/xml
+
+	Spring Rest Support
+		Spring Web MVC provides support for Spring Rest
+		@RestController
+			Extension of @Controller
+			Handles REST request and response
+		Spring REST will also automatically convert Java POJOs to JSON
+		
+	@Configuration
+	@EnableWebMvc
+	@ComponentScan("com.oscar.springdemo")
+	public class DemoAppConfig {
+
+	}
+	
+	public class MySpringMvcDispatcherServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer{
+		@Override
+		protected Class<?>[] getRootConfigClasses() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		@Override
+		protected Class<?>[] getServletConfigClasses() {
+			// TODO Auto-generated method stub
+			return new Class[] {DemoAppConfig.class};
+		}
+		@Override
+		protected String[] getServletMappings() {
+			// TODO Auto-generated method stub
+			return new String[] {"/"};
+		}
+	}
+
+	@RestController
+	@RequestMapping("/test")
+	public class DemoRestController {
+		@RequestMapping("hello")
+		public String helloWorld() {
+			return "Hello world!!!";
+		}
+	}		
+	
+	@RestController
+	public class RestUserController {
+		@ResponseStatus(HttpStatus.OK)
+		@RequestMapping(value = "/users/{$username}",
+			method = RequestMethod.PUT,
+			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+		public User updateByEmail(
+			@PathVariable("$username") String username,
+			@RequestBody User newUser) throws UserException {
+
+			User user = userService.findByUsername(username);
+			if (user == null) {
+				throw new UserException("User not found with username " + username);
+			}
+			return user;
+		}
+
+
+Spring JDBC
+	-DML stands for Data Manipulation Language, and the database operations presented so far are part of it, the commands SELECT, INSERT, UPDATE, and DELETE are database statements
+		used to create, update, or delete data from existing tables.
+	-DDL stands for Data Definition Language, and database operations that are part of it are used to manipulate database objects: tables, views, cursors, etc
+
+	-Configure a DataSource
+		-xml configuration
+			<beans>
+				<bean id="dataSource" class="org.springframework.jdbc.dataSource.DriverManagerDataSource">
+					<property name="driverClassName" value="org.apache.derby.jdbc.ClientDriver"/>
+					<property name="url" value="jdbc:derby://localhost:1527/db;create=true"/>
+					<property name="username" value="sa"/>
+					<property name="password" value="sa"/>
+				</bean>
+				<context:annotation-config/>
+				<context:component-scan base-package="com.oscar.spring"/>
+			</beans>	
+			
+		-Java configuration
+			@Bean
+			public DataSource dataSource() {
+				DriverManagerDataSource ds = new DriverManagerDataSource();
+				ds.setDriverClassName("org.h2.Driver");
+				ds.setUrl("jdbc:h2:tcp://localhost/~/spitter");
+				ds.setUsername("sa");
+				ds.setPassword("sa");
+				return ds;
+			}
+
+			@Bean
+			public JdbcTemplate userJdbcTemplate() {						--->		Using JDBC Template
+				return new JdbcTemplate(dataSource());
+			}
+			
+	-JdbcTemplate
+		The JdbcTemplate provides the developer a multitude of methods to query for entities, generic maps, and lists and simple types (long, int, String).
+			Use RowMapper<T> when each row of the ResultSet maps to a domain object.
+			Use queryForObject when it is expected that execution of the query will return a single result.
+			Use RowCallbackHandler when no value should be returned.
+			Use ResultSetExtractor<T> when multiple rows in the ResultSet map to a single object.
+
+		--Create repository that use the jdbcTemplate
+				@Repository("userTemplateRepo")
+				public class JdbcTemplateUserRepo implements UserRepo {
+					private RowMapper<User> rowMapper = new UserRowMapper();
+					protected JdbcTemplate jdbcTemplate;							---> it is injected was declared before 
+
+					@Autowired
+					public JdbcTemplateUserRepo(JdbcTemplate jdbcTemplate) {
+						this.jdbcTemplate = jdbcTemplate;
+					}
+
+					@Override
+					public User findById(Long id) {
+						String sql = "select id, email, username, password from p_user where id= ?";
+						return jdbcTemplate.queryForObject(sql, rowMapper, id);
+					}
+				}
+		--Creating the rowMapper
+			class UserRowMapper implements RowMapper<User> {
+				public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+						Long id = rs.getLong("ID");
+						String email = rs.getString("EMAIL");
+						String username = rs.getString("USERNAME");
+						String password = rs.getString("PASSWORD");
+						User user = new User();
+						user.setId(id);
+						user.setUsername(username);
+						user.setEmail(email);
+						user.setPassword(password);
+						return user;
+					}
+				}
+		
+		-queryForObject
+			String sql = "select id, email, username,password from p_user where id= ?";
+			jdbcTemplate.queryForObject(sql, rowMapper, id);					--->	Return an object
+
+		-queryForInt
+			public int countUsers() {
+				String sql = "select count(*) from p_user";		
+				return jdbcTemplate.queryForInt(sql);							--->	Return an int
+			}
+
+		-queryForLong
+			public Long findIdByUsername(String username) {
+				String sql = "select id from p_user where username = ?";		--->	Passing a parameter
+				return jdbcTemplate.queryForLong(sql, username);				--->	Return a log
+			}
+
+		-queryForMap
+			public Map<String, Object> findByIdAsMap(Long id) {
+				String sql = "select * from p_user where id= ?";				--->	Passing a parameter
+				return jdbcTemplate.queryForMap(sql, id);						--->	Return a map 
+			}
+		
+					---	MAP RETURNED ---
+						ID=1,
+						FIRST_NAME=null,
+						USERNAME=John,
+						LAST_NAME=null,	
+						PASSWORD=test
+					---	MAP RETURNED ---							
+
+		-queryForList
+			public List<Map<String, Object>> findAllAsMaps() {
+				String sql = "select * from p_user";
+				return jdbcTemplate.queryForList(sql);
+			}
+					---	LIST RETURNED ---
+					[
+						{
+							ID=1,
+							FIRST_NAME=null,
+							USERNAME=John,
+							EMAIL=john@pet.com
+						},
+						{
+							ID=2,
+							FIRST_NAME=null,
+							USERNAME=Mary,
+							EMAIL=mary@pet.com
+						}
+					]
+					---	LIST RETURNED ---
+
+		-Commond methods
+			query				--->	return a list of object, select
+			queryForObject		--->	return a specified object, select
+			update				--->	return integer value with columns affected, update, delete, insert
+			execute				--->	for commands like create table,
