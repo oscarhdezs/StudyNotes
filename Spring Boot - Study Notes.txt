@@ -1,0 +1,122 @@
+What is Micro Service?
+Micro Service is an architecture that allows the developers to develop and deploy services independently. Each service running has its own process and this achieves the lightweight model to support business applications.
+
+@SpringBootApplication
+The entry point of the spring boot application is the class contains @SpringBootApplication annotation and the main method.
+If you added @SpringBootApplication annotation to the class, you do not need to add the @EnableAutoConfiguration, @ComponentScan and @SpringBootConfiguration annotation. The @SpringBootApplication annotation includes all other annotations.
+
+@EnableAutoConfiguration
+Spring Boot automatically configures your application based on the dependencies you have added to the project by using @EnableAutoConfiguration annotation.
+
+Spring Initializer
+https://start.spring.io/
+
+Create a Deployable War File
+  in main class you must extends SpringBootServletInitializer and override the configure
+    @SpringBootApplication
+    public class Application extends SpringBootServletInitializer {
+      @Override
+      protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(Application.class);
+      }
+
+      public static void main(String[] args) throws Exception {
+        SpringApplication.run(Application.class, args);
+      }
+    }
+
+  in pom.xml
+    Change packaging to war
+      <packaging>war</packaging>    --->  to war
+    add embedded container dependencies as "provided"
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-tomcat</artifactId>
+        <scope>provided</scope>
+      </dependency>
+    Add start class
+      <properties>
+        <start-class>com.tutorialspoint.demo.DemoApplication</start-class>
+      </properties>
+
+Properties File
+  In Spring Boot, properties are kept in the application.properties file under the classpath.
+    server.port = 9090
+    spring.application.name = demoservice
+
+    spring.datasource.driverClassName = com.mysql.jdbc.Driver
+    spring.datasource.url = jdbc:mysql://localhost:3306/USERSERVICE?autoreconnect=true
+    spring.datasource.username = root
+    spring.datasource.password = root
+
+  choose different profiles
+    application-dev.properties
+    application-prod.properties
+      in shell execute
+        java -jar name.jar --spring.profiles.active=dev
+
+Handle Exceptions
+  @ControllerAdvice
+  public class ProductExceptionController {
+     @ExceptionHandler(value = ProductNotfoundException.class)    --->  you have create this class and extends of runtimeexception
+     public ResponseEntity<Object> exception(ProductNotfoundException exception) {
+        return new ResponseEntity<>("Product not found", HttpStatus.NOT_FOUND);
+     }
+  }
+
+Junit
+  import org.springframework.test.web.servlet.MockMvc;
+  import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+  @SpringBootTest
+  @ActiveProfiles("test")
+  @RunWith(SpringJUnit4ClassRunner.class)
+  public class MockitoDemoApplicationTests {
+
+Multiple datasource
+  *- Add dependencies to pom.xml
+  1- in application.properties add the properties for both database
+    spring.dbProductService.driverClassName = com.mysql.jdbc.Driver
+    spring.dbProductService.url = jdbc:mysql://localhost:3306/PRODUCTSERVICE?autoreconnect = true
+    spring.dbProductService.username = root
+    spring.dbProductService.password = root
+
+    spring.dbUserService.driverClassName = com.mysql.jdbc.Driver
+    spring.dbUserService.url = jdbc:mysql://localhost:3306/USERSERVICE?autoreconnect = true
+    spring.dbUserService.username = root
+    spring.dbUserService.password = root
+
+  2- Create Configuration class to create DataSource and JdbcTemplate
+    @Configuration
+    public class DatabaseConfig {
+      @Bean(name = "dbProductService")
+      @ConfigurationProperties(prefix = "spring.dbProductService")
+      @Primary
+      public DataSource createProductServiceDataSource() {
+        return DataSourceBuilder.create().build();
+      }
+      @Bean(name = "dbUserService")
+      @ConfigurationProperties(prefix = "spring.dbUserService")
+      public DataSource createUserServiceDataSource() {
+        return DataSourceBuilder.create().build();
+      }
+      @Bean(name = "jdbcProductService")
+      @Autowired
+      public JdbcTemplate createJdbcTemplate_ProductService(@Qualifier("dbProductService") DataSource productServiceDS) {
+        return new JdbcTemplate(productServiceDS);
+      }
+      @Bean(name = "jdbcUserService")
+      @Autowired
+      public JdbcTemplate createJdbcTemplate_UserService(@Qualifier("dbUserService") DataSource userServiceDS) {
+        return new JdbcTemplate(userServiceDS);
+      }
+    }
+
+  3- Use the datasources
+    @Qualifier("jdbcProductService")
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    @Qualifier("jdbcUserService")
+    @Autowired
+    JdbcTemplate jdbcTemplate;

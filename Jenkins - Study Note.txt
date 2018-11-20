@@ -1,0 +1,90 @@
+Jenkins Pipeline is a suite of plugins which supports implementing and integrating continuous delivery pipelines into Jenkins.
+V 2.138
+A continuous delivery (CD) pipeline is an automated expression of your process for getting software from version control right through to your users and customers.
+Every change to your software (committed in source control) goes through a complex process on its way to being released. This process involves building the software in a reliable and repeatable manner, as well as progressing the built software (called a "build") through multiple stages of testing and deployment.
+
+Creating a Jenkinsfile and committing it to source control provides a number of immediate benefits:
+  Automatically creates a Pipeline build process for all branches and pull requests.
+  Code review/iteration on the Pipeline (along with the remaining source code).
+  Audit trail for the Pipeline.
+  Single source of truth [3] for the Pipeline, which can be viewed and edited by multiple members of the project.
+
+Create CI/CD
+
+  1- Run jenkins using Docker
+    docker run --rm -u root -p 8080:8080 -v jenkins-data:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock -v "%HOMEPATH%":/home jenkinsci/blueocean
+
+  2- Fork and clone repository
+    Clone in this path
+      /Users/<your-username>/Documents/GitHub/simple-node-js-react-npm-app
+
+  3- Create a pipeline
+    Create new job (New Item) ---> Enter name & Description ---> in Pipeline section --->
+      Definition choose: Pipeline script from SCM
+      From SCM: choose Git
+      Repository URL: /home/Documents/GitHub/simple-node-js-react-npm-app
+      Save.
+
+  4- Create Jenkinsfile file (nodejs and react)
+  pipeline {
+    agent {
+        docker {
+            image 'node:6-alpine'
+            args '-p 3000:3000'
+        }
+    }
+    environment {
+        CI = 'true'
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh './jenkins/scripts/test.sh'
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+                input message: 'Finished using the web site? (Click "Proceed" to continue)'
+                sh './jenkins/scripts/kill.sh'
+            }
+        }
+    }
+}
+
+Java and maven
+pipeline {
+    agent {
+        docker {
+            image 'maven:3-alpine'
+            args '-v /root/.m2:/root/.m2'
+        }
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+            }
+        }
+    }
+}

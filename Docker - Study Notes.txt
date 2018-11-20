@@ -1,0 +1,104 @@
+Docker is a platform for developers and sysadmins to develop, deploy, and run applications with containers. The use of Linux containers to deploy applications is called containerization.
+The idea of docker is to develop portables and light containers for software application that can it be executed in any machine that use docker.
+Regardless of the operating system that the machine has.
+for example is any user wants to access to any application this software needs to be installed in the machine, but also the machine needs to be installed other things for running the application
+like JRE, Server application, etc. so with docker the container already have all this things the only that you need to do is run the image in docker and that is all.
+
+Benefits for developers
+they only take care of develop the application without worry about that if this app can run in other machine with different OS
+
+V 18
+Containerization is increasingly popular because containers are:
+
+Flexible: Even the most complex applications can be containerized.
+Lightweight: Containers leverage and share the host kernel.
+Interchangeable: You can deploy updates and upgrades on-the-fly.
+Portable: You can build locally, deploy to the cloud, and run anywhere.
+Scalable: You can increase and automatically distribute container replicas.
+Stackable: You can stack services vertically and on-the-fly.
+
+A container is launched by running an image. An image is an executable package that includes everything needed to run an application--the code, a runtime, libraries, environment variables, and configuration files.
+A container runs natively on Linux and shares the kernel of the host machine with other containers.
+
+## Execute Docker image
+docker run hello-world
+
+## List Docker images
+docker image ls
+
+## List Docker containers (running, all, all in quiet mode)
+docker container ls
+docker container ls --all
+docker container ls -aq
+
+#Delete an image
+docker rmi image-name
+
+#Stop running container
+docker stop container_id
+
+Define a container with Dockerfile
+Dockerfile defines what goes on in the environment inside your container.
+Docker builds images by reading instructions from a Dockerfile.
+
+Dockerfile instructions
+  FROM
+    This instruction is used to set the Base Image for the subsequent instructions.
+    A valid Dockerfile must have FROM as its first instruction.
+
+  RUN
+    This instruction is used to execute any command of the current image.
+
+  CMD
+    This is used to execute application by the image. We should use CMD always in the
+      following form CMD ["executable", "param1", "param2"?]
+
+  COPY
+    This instruction is used to copy new files or directories from source to the filesystem of the
+      container at the destination.
+
+  WORKDIR
+    The WORKDIR is used to set the working directory for any RUN, CMD and COPY instruction that follows
+     it in the Dockerfile. If work directory does not exist, it will be created by default.
+
+
+BUILD IMAGE
+
+1- Create directory
+mkdir  java-docker-app
+
+2- Create java file
+// Hello.java
+
+class Hello{
+  public static void main(String[] args){
+    System.out.println("This is java app \n by using Docker");
+    }
+}
+
+3- Create a Dockerfile
+//Dockerfile
+
+FROM java:8
+COPY . /var/www/java
+WORKDIR /var/www/java
+RUN javac Hello.java
+CMD ["java", "Hello"]
+
+4- Buld Docker Image
+docker build -t java-app .
+
+5-Run Docker Image
+docker run java-app
+
+PUSH IMAGE TO REPOSITORY
+1- log in
+docker login
+
+2- Tag Docker Image
+docker tag image-name username/image-name
+docker tag hello-world oscargdl/hello-world
+
+3- Push docker image
+docker push  username/image-name
+docker push oscargdl/hello-world
