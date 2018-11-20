@@ -1,0 +1,246 @@
+Maven
+	-What is Maven?
+		-Maven is a project management and comprehension tool. Maven provides developers a complete build lifecycle framework.
+		 Development team can automate the project's build infrastructure in almost no time as Maven uses a standard directory layout and a default build lifecycle.
+		 -As most of the project setups are simple and reusable, Maven makes life of developer easy while creating reports, checks, build and testing automation setups.
+		 -To summarize, Maven simplifies and standardizes the project build process. It handles compilation, distribution, documentation, team collaboration and other tasks
+		 seamlessly. Maven increases reusability and takes care of most of build related tasks.
+		 -Maven project structure and contents are declared in an xml file, pom.xml referred as Project Object Model (POM).
+		 -When a Maven project is created, Maven creates default project structure. Developer is only required to place files accordingly
+		  and he/she need not to define any configuration in pom.xml.
+
+	-POM
+		-Project Object Model It is an XML file. It always resides in the base directory of the project as pom.xml.
+		-The POM contains information about the project and various configuration detail used by Maven to build the project(s).
+		-POM also contains the goals and plugins. While executing a task or goal, Maven looks for the POM in the current directory.
+		-It reads the POM, gets the needed configuration information, then executes the goal.
+		Some of the configuration that can be specified in the POM are following:
+			project dependencies
+			plugins
+			goals
+			build profiles
+			project version
+			developers
+			mailing list
+		-Before creating a POM, we should first decide the project group (groupId), its name(artifactId) and its version as these attributes
+		 help in uniquely identifying the project in repository.
+
+			<project xmlns="http://maven.apache.org/POM/4.0.0"
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+			http://maven.apache.org/xsd/maven-4.0.0.xsd">
+				<modelVersion>4.0.0</modelVersion>
+				<groupId>com.companyname.project-group</groupId>
+				<artifactId>project</artifactId>
+				<version>1.0</version>
+			</project>
+
+		-It should be noted that there should be a single POM file for each project.
+			All POM files require the project element and three mandatory fields: groupId, artifactId,version.
+			Projects notation in repository is groupId:artifactId:version.
+			Root element of POM.xml is project and it has three major sub-nodes :
+				  Node								Description
+				groupId			This is an Id of project's group. This is generally unique amongst an organization or a project.
+								For example, a banking group com.company.bank has all bank related projects.
+				artifactId		This is an Id of the project.This is generally name of the project. For example, consumer-banking.
+								Along with the groupId, the artifactId defines the artifact's location within the repository.
+				version			This is the version of the project.Along with the groupId, It is used within an artifact's repository
+								to separate versions from each other. For example:
+									com.company.bank:consumer-banking:1.0
+									com.company.bank:consumer-banking:1.1.
+		-Create efective pom
+			mvn help:effective-pom
+
+	What is Build Lifecycle?
+		A Build Lifecycle is a well defined sequence of phases which define the order in which the goals are to be executed. Here phase represents a stage in life cycle.
+	`	As an example, a typical Maven Build Lifecycle consists of following sequence of phases:
+
+			Phase					Handles							Description
+		prepare-resources		resource copying		Resource copying can be customized in this phase.
+		compile					compilation				Source code compilation is done in this phase.
+		package					packaging				This phase creates the JAR / WAR package as mentioned in packaging in POM.xml.
+		install					installation			This phase installs the package in local / remote maven repository.
+
+		-There are always pre and post phases which can be used to register goals which must run prior to or after a particular phase.
+		-Maven has following three standard lifecycles:
+			-clean
+			-default(or build)
+			-site
+
+			-Clean Lifecycle
+				When we execute mvn post-clean command, Maven invokes the clean lifecycle consisting of the following phases.
+					pre-clean	--> only pre-clean
+					clean		--> clean and pre-clean
+					post-clean	--> three phases
+				-clean:clean goal deletes the output of a build by deleting the build directory. Thus when mvn clean command executes, Maven deletes the build directory.
+
+					mvn clean
+
+			-Default (or Build) Lifecycle
+				This is the primary life cycle of Maven and is used to build the application. It has following 23 phases.
+
+					Lifecycle Phase								Description
+						validate		Validates whether project is correct and all necessary information is available to complete the build process.
+						initialize		Initializes build state, for example set properties
+					generate-sources	Generate any source code to be included in compilation phase.
+					process-sources		Process the source code, for example, filter any value.
+					generate-resources	Generate resources to be included in the package.
+					process-resources	Copy and process the resources into the destination directory, ready for packaging phase.
+						compile			Compile the source code of the project.
+					process-classes		Post-process the generated files from compilation, for example to do bytecode enhancement/optimization on Java classes.
+				generate-test-sources	Generate any test source code to be included in compilation phase.
+				process-test-sources	Process the test source code, for example, filter any values.
+					test-compile		Compile the test source code into the test destination directory.
+				process-test-classes	Process the generated files from test code file compilation.
+						test			Run tests using a suitable unit testing framework(Junit is one).
+					prepare-package		Perform any operations necessary to prepare a package before the actual packaging.
+						package			Take the compiled code and package it in its distributable format, such as a JAR, WAR, or EAR file.
+				pre-integration-test	Perform actions required before integration tests are executed. For example, setting up the required environment.
+					integration-test	Process and deploy the package if necessary into an environment where integration tests can be run.
+				post-integration-test	Perform actions required after integration tests have been executed. For example, cleaning up the environment.
+						verify			Run any check-ups to verify the package is valid and meets quality criterias.
+					install				Install the package into the local repository, which can be used as a dependency in other projects locally.
+					deploy				Copies the final package to the remote repository for sharing with other developers and projects.
+
+					mvn compile
+
+			-Site Lifecycle
+				-Maven Site plugin is generally used to create fresh documentation to create reports, deploy site etc.
+				Phases
+					pre-site
+					site
+					post-site
+					site-deploy
+
+	-What is Build Profile?
+		A Build profile is a set of configuration values which can be used to set or override default values of Maven build.
+		Using a build profile, you can customize build for different environments such as Production v/s Development environments.
+
+		Profiles are specified in pom.xml file using its activeProfiles / profiles elements and are triggered in variety of ways.
+		Profiles modify the POM at build time, and are used to give parameters different target environments
+		(for example, the path of the database server in the development, testing, and production environments).
+
+		Types of Build Profile
+			Build profiles are majorly of three types
+
+			Type					Where it is defined
+		Per Project		Defined in the project POM file, pom.xml
+		Per User		Defined in Maven settings xml file (%USER_HOME%/.m2/settings.xml)
+		Global			Defined in Maven global settings xml file (%M2_HOME%/conf/settings.xml)
+
+		-Explicit Profile Activation
+			<project xmlns="http://maven.apache.org/POM/4.0.0"
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+			http://maven.apache.org/xsd/maven-4.0.0.xsd">
+				<modelVersion>4.0.0</modelVersion>
+				<groupId>com.companyname.projectgroup</groupId>
+				<artifactId>project</artifactId>
+				<version>1.0</version>
+				<profiles>
+					<profile>
+						<id>test</id>
+						<build>
+							<plugins>
+								<plugin>
+									<groupId>org.apache.maven.plugins</groupId>
+									<artifactId>maven-antrun-plugin</artifactId>
+									<version>1.1</version>
+									<executions>
+										<execution>
+											<id>id.test</id>
+											<phase>test</phase>
+											<goals>
+												<goal>run</goal>
+											</goals>
+											<configuration>
+												<tasks>
+													<echo>Using env.test.properties</echo>
+													<copy file="src/main/resources/env.test.properties" tofile="${project.build.outputDirectory}/env.properties"/>
+												</tasks>
+											</configuration>
+										</execution>
+									</executions>
+								</plugin>
+							</plugins>
+						</build>
+					</profile>
+				</profiles>
+				<dependencies>
+					<dependency>
+						<groupId>junit</groupId>
+						<artifactId>junit</artifactId>
+						<version>3.8.1</version>
+						<scope>test</scope>
+					</dependency>
+					<dependency>												--->		external jar
+						<groupId>RAD85lic</groupId>
+						<artifactId>RAD85lic</artifactId>
+						<version>1.0</version>
+						<scope>system</scope>
+						<systemPath>${basedir}\src\lib\RAD85lic.jar</systemPath>
+					</dependency>
+				</dependencies>
+				<repositories>
+					<repository>
+						<id>companyname.lib1</id>
+						<url>http://download.companyname.org/maven2/lib1</url>
+					</repository>
+				</repositories>
+			</project>
+
+		execute profile
+			mvn test -Ptest
+			mvn test -Pnormal
+			-p 		specify the profile id name
+
+	-What is a Maven Repository?
+		In Maven terminology, a repository is a place i.e. directory where all the project jars, library jar, plugins or any other project specific
+		artifacts are stored and can be used by Maven easily.
+			Maven repository are of three types
+				local
+				central
+				remote
+
+	-Creating a java project
+		mvn archetype:generate
+		mvn archetype:generate  -DgroupId=com.oscar.spring  -DartifactId=spring    -DarchetypeArtifactId=maven-archetype-quickstart  -DinteractiveMode=false
+		mvn archetype:generate  -DgroupId=com.oscar.proyecto -DartifactId=proyecto -DarchetypeArtifactId=maven-archetype-webapp  -DinteractiveMode=false
+
+	-Maven commands
+		compile
+			mvn compile 				--->	Compile soruces
+			mvn test						--->	Compile test and execute test
+			mvn test-compile		--->	Only compile
+		create a jar
+			mvn package
+		install artifact in local repository
+			mvn install
+		clean target
+			mvn clean
+
+	-Build lifecycle
+		There are three built-in build lifecycles: default, clean and site.
+			The default lifecycle handles your project deployment,
+			the clean lifecycle handles project cleaning
+				pre-clean			execute processes needed prior to the actual project cleaning
+				clean	remove 	all files generated by the previous build
+				post-clean		execute processes needed to finalize the project cleaning
+			the site lifecycle handles the creation of your project's site documentation.
+				pre-site			execute processes needed prior to the actual project site generation
+				site					generate the project's site documentation
+				post-site			execute processes needed to finalize the site generation, and to prepare for site deployment
+				site-deploy		deploy the generated site documentation to the specified web server
+
+
+		validate - validate the project is correct and all necessary information is available
+		compile - compile the source code of the project
+		test - test the compiled source code using a suitable unit testing framework. These tests should not require the code be packaged or deployed
+		package - take the compiled code and package it in its distributable format, such as a JAR.
+		verify - run any checks on results of integration tests to ensure quality criteria are met
+		install - install the package into the local repository, for use as a dependency in other projects locally
+		deploy - done in the build environment, copies the final package to the remote repository for sharing with other developers and projects.
+
+	-plugin
+		Plugins are artifacts that provide goals to Maven.
+			For example, the Compiler plugin has two goals: compile and testCompile
