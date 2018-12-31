@@ -1,0 +1,130 @@
+SAX vs DOM
+  Dom load entire xml tree in memory
+  Backward and forward navigation is possible.
+  Dom is faster that SAX
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    Document document = builder.parse(new File("archivo.txt"));
+    document.getDocumentElement().getNodeName();
+    document.getElementsByTagNames("student");
+                    or
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    Document doc = builder.newDocument();
+    Element rootElement = doc.createElement("Cars");
+    Element subElement = doc.createElement("superCar");
+    Attr attribute = doc.createAttribute("company");
+    attribute.setValue("ferrari");
+    subElement.appendAttributeNode(attribute);
+    rootElement.appendChild(subElement);
+    
+  Sax load piece of xml file and it is handle by events, when it find a tag starting <hello> the startDocument event is triggered
+    when if find a tag ending </hello> the endDocument is triggered.
+  Sax is better when the xml file is big
+  Sax read from top to bottom, backward navigation is not possible.
+    SAXParserFactory factory = SAXParserFactory.newInstance();
+    SAXParser saxParser = factory.newSAXParser();
+    UserHandler userhandler = new UserHandler();
+    saxParser.parse(new File("archivo.txt"), userhandler); 
+    
+    public class UserHandler extends DefaultHandler {
+      public void startElement(String uri, String localName, String qName, Attributes attributes){
+      }
+      public void endElement(String uri,  String localName, String qName, Attributes attributes){
+      }
+    }
+    
+DataBase Concepts
+  Database
+    Collection of tables with related data
+  Table
+    Matrix of data, in this table we can store datas this datas are stored in columns
+  Column
+    contain data that are stored
+  Primary key
+    Unique id in a table, this value can be twice in a table
+  Foreign Key
+    Foreing key is a link between 2 tables.
+  index
+    is a data structure that improve the speed of operation in a table. you improve the select statement but is a little 
+    slow for delete and insert, because every time that you do an Insert or Delete the index update all records
+  
+  DDL (Data Definition Language)
+    Crate, Alter, Drop
+  DML (Data Manipulation Language)
+    Select, insert, update, delete
+  DCL (Data Control Language)
+    Grant, Revoke
+  
+  SQL Constraints
+    not null
+    default
+    unique
+    primary key
+    foreign key
+    check 
+    
+  
+  alter table tableName drop field
+                        add field INT
+                        modify field INT(10)
+                        change filed filed1 INT(10)
+                        MODIFY j BIGINT NOT NULL DEFAULT 100;
+  ALTER TABLE testalter_tbl RENAME TO alter_tbl;
+  
+  join combine the fields of the tables in a row. and can be any number of fields for each table
+  union combine the result of two or more select statemetn without return duplicate values
+    union must have, same number of column, same data type, same order.
+    
+  Transaction
+          A transaction is a unit of work that is performed against a database. 
+    ACID
+      Atomicity
+      Consistency
+      Isolation
+      Durability
+    Transaction
+      Commit
+      Rollback
+      savepoint
+      set transaction (read write | read only)
+      
+statement, preparedStatement, callableStatement
+  statement
+    for executing static sql, it does not allow parameters
+  preparedStatement
+    for executing dynamic or parameterized sql, or when you are going to execute the same sql multiple times, 
+    it allow in parameters, better that statment Because, PreparedStatement are precompiled and the query plan 
+    is created only once irrespective of how many times you are executing that query. 
+  callableStatement 
+    for executing stored procedures in database, it allow in parameter out parameter, in out parameter.
+    
+   Connection con = DriverManager.getConnection(url, user, pwd);
+   Statement st = con.createStatement();
+   ResultSet rs = st.executeQuery(SQL);
+              or
+   PreparedStatement ps = con.prepareStatement(SQL);
+   st.setInt(1,30);
+   st.setInt(2,40);
+   int result = st.executeUpdate();
+            or
+   CallableStatement cs = con.prepareCall(sql);
+   cs.setInt(1,102);
+	 cs.registerOutParameter(2, Types.VARCHAR);
+   boolean result = cs.execute();
+   
+JDBC vs Hibernate
+  Hibernate support cache, that means that when you execute a query this query is stored in cache so when you execute again
+  similar query it is taken from the cache.
+  Hibernate you can use SQL and HQL, with HQL you can store all values that you want to insert in an object and with simple
+  isert,update sentence you execute the query. 
+  Hibernate facilite automatic object mapping allows Hibernate to map database tables to application objects 
+  during interaction with RDBMS.
+  Hibernate use less code to for examplet for insert you only have to set the property at the object and only do a presist
+  rather jdbc you have to write all sql query.
+  Hibernate solve impedence mistmatch one example can be the the data types between Dababase and Java objects
+  Hiberante is database independient that means that you can change from mysql to access withouth problem only changing the
+  dialect in hibernate properties
+  JDBC is easy to learn
+  JDBC more documentation
+  
