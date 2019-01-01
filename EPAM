@@ -128,3 +128,33 @@ JDBC vs Hibernate
   JDBC is easy to learn
   JDBC more documentation
   
+Deadlock
+	When two or more thread are blocked and are waiting for release the resource that other thread have locked. e.g.
+thread A is waiting for some resource that is locked by thread B and thread B is waiting for some resource that thread A 
+has locked.
+
+Prevent Deadlock
+  Non Overlaping locks
+  Lock Ordering
+  Lock Timeout
+  	Lock lock = new ReentrankLock();
+	lock.tryLock(10,Seconds);
+  Single Thread
+  
+Race condition
+	When more that one thread try to access a shared resource (write/modify) at the same time.
+		Prevent race condition
+			volatile
+			making synchronized methods
+			use Atomic variables
+			ReadWriteLock
+				ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+				readWriteLock.readLock().lock();
+				readWriteLock.readLock().unlock();
+				readWriteLock.writeLock().lock();
+				readWriteLock.writeLock().unlock();
+	
+Starvation
+	where you have multiple threads vying for the access over the shared resources you may come across a situation 
+	where a thread (or a bunch of threads) is unable to gain regular access to shared resources and is unable to make 
+	progress.
