@@ -1,0 +1,35 @@
+public class UserServiceImpl implements UserService{
+	@Override
+	public void updateUser(@RequestBody User updates,int id) {
+		User user = userRepository.getOne(id);
+		String first = updates.getFirstName();
+		String last = updates.getLastName();
+		Boolean active = updates.isActive();
+		if(first!=null) {
+			user.setFirstName(first);
+		}
+		if(last!=null) {
+			user.setLastName(last);
+		}
+		if(active!=null) {
+			user.setActive(active);
+		}
+		userRepository.save(user);
+	}
+}
+
+public interface UserService {
+	public void updateUser(@RequestBody  User updates,int id); 
+}
+
+
+@Controller
+public class UserController {
+	@RequestMapping(value="/api/user/",method=RequestMethod.PATCH)
+	@ResponseBody
+	public ResponseEntity<?> updateUser(@RequestBody User updates){
+		System.out.println(updates);
+		userService.updateUser(updates, updates.getUserId());
+		return ResponseEntity.ok("Resource updated");
+	}
+}
