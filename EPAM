@@ -158,3 +158,28 @@ Starvation
 	where you have multiple threads vying for the access over the shared resources you may come across a situation 
 	where a thread (or a bunch of threads) is unable to gain regular access to shared resources and is unable to make 
 	progress.
+
+Symmetric Encryption 
+	IDEA
+	AES
+	DES
+Asymetric Encryption
+	RSA
+	Diffie-Hellman
+Function Hash
+	Applications
+		Verifying the integrity of messages and files
+		Password verification
+	MD5
+	SHA-1
+SSL (Secure Socket Layer) TLS (Transport Layer Security)
+	are crypthograpic protocols  it provies authentication and encryption of the information between server, 
+	nodes and application over the net
+Class A
+	0.0.0.0 to 127.255.255.255 
+Class B
+	128.0.0.0 to 191.255.255.255
+Class C
+	192.0.0.0 to 223.255.255.255
+Class D
+	224.0.0.0 to 239.255.255.255
