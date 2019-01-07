@@ -1,3 +1,11 @@
+if (roles != null) {
+			for (int x = 0; x < roles.size(); x++) {
+				user.getRoles().get(x).setActive(roles.get(x).getActive());
+				user.getRoles().get(x).setRoleName(roles.get(x).getRoleName());
+			}
+			needToUpdate = true;
+		}
+
 Script database
 use itexico;
 
